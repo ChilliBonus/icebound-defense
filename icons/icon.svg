@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Icebound Stellar Frontier">
+  <defs>
+    <radialGradient id="space" cx="32%" cy="18%" r="90%">
+      <stop offset="0" stop-color="#173f50"/>
+      <stop offset="0.55" stop-color="#071923"/>
+      <stop offset="1" stop-color="#02080d"/>
+    </radialGradient>
+    <linearGradient id="planet" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#79f1ec"/>
+      <stop offset="0.45" stop-color="#2f9ab6"/>
+      <stop offset="1" stop-color="#153a55"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="0" y1="0" x2="0.8" y2="1">
+      <stop stop-color="#dcffff"/>
+      <stop offset="0.45" stop-color="#6cd9e4"/>
+      <stop offset="1" stop-color="#2a708d"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="104" fill="url(#space)"/>
+  <g fill="#bffcff">
+    <circle cx="112" cy="108" r="3"/><circle cx="394" cy="127" r="4"/><circle cx="421" cy="346" r="2.5"/><circle cx="103" cy="373" r="2"/><circle cx="349" cy="78" r="2"/>
+  </g>
+  <ellipse cx="256" cy="270" rx="196" ry="77" fill="none" stroke="#e8b85b" stroke-width="8" opacity="0.86" transform="rotate(-18 256 270)"/>
+  <circle cx="256" cy="260" r="156" fill="url(#planet)" stroke="#8cf8f0" stroke-width="5"/>
+  <path d="M126 289c47-36 94-40 142-13 48 26 84 20 118-11-8 84-60 143-135 150-65-2-111-45-125-126z" fill="#071923" opacity="0.62"/>
+  <path d="M256 117 363 176v95c0 69-42 118-107 146-65-28-107-77-107-146v-95z" fill="#07151edd" stroke="url(#shield)" stroke-width="12" stroke-linejoin="round" filter="url(#glow)"/>
+  <path d="M201 315h110v44H201zM217 251h78v65h-78zM235 211h42v42h-42z" fill="url(#shield)"/>
+  <path d="M209 250h94l-15-34h-64zM190 359h132l-14 27H204z" fill="#e5bd67"/>
+  <path d="M250 260h12v92h-12z" fill="#08202a" opacity="0.72"/>
+</svg>

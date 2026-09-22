@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Installierbares Offline-Tower-Defense-Spiel auf vier spektakulären Planeten.">
+  <meta name="theme-color" content="#07151e">
+  <meta name="application-name" content="Icebound">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Icebound">
+  <title>ICEBOUND // STELLAR FRONTIER</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="scanlines"></div>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="hex">⬡</span><div><b>ICEBOUND</b><small>STELLAR COLONY DEFENSE GRID</small></div></div>
+      <div class="topbar-right">
+        <div class="telemetry"><span><i></i> GRID ONLINE</span><span>SEKTOR <b id="sectorName">N-07</b></span><span id="clock">00:00</span></div>
+        <div class="topbar-tools">
+          <button id="soundBtn" class="topbar-tool" type="button" aria-label="Musik und Geräusche umschalten" title="Musik und Geräusche umschalten">♫</button>
+          <button id="codexBtn" class="topbar-tool" type="button" aria-label="Arsenal-Übersicht öffnen" title="Arsenal-Übersicht — was kann welche Waffe? (Taste I)">?</button>
+          <button id="settingsBtn" class="topbar-tool" type="button" aria-label="Einstellungen öffnen" title="Einstellungen">⚙</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="game-frame">
+      <div class="canvas-wrap">
+        <canvas id="game" width="1000" height="650" aria-label="Spielfeld"></canvas>
+
+        <div id="buildConfirmBar" class="build-confirm-bar" hidden>
+          <div class="build-summary"><b id="buildSummaryCount">0 ANLAGEN GEPLANT</b><span id="buildSummaryCost">0 ENERGIE</span></div>
+          <button id="buildCommitBtn" class="build-commit" type="button" aria-label="Bauphase bestätigen" title="Bestätigen">✓</button>
+          <button id="buildDiscardBtn" class="build-discard" type="button" aria-label="Bauphase verwerfen" title="Verwerfen">✕</button>
+        </div>
+        <div class="aurora"></div>
+        <div class="view-mode"><b>3D</b><span>PERSPECTIVE<br>TACTICAL FEED</span></div>
+        <div class="depth-meter"><i></i><i></i><i></i><i></i><span>DEPTH SCAN</span></div>
+        <div id="message" class="message">
+          <small id="messageEyebrow">STELLAR DEFENSE NETWORK</small>
+          <strong id="messageTitle">EINSATZ WÄHLEN</strong>
+          <span id="messageCopy" class="message-copy">Vier Welten senden Verteidigungsnotrufe.</span>
+          <div class="world-picker">
+            <div class="picker-label"><span>01</span> PLANET</div>
+            <div id="planetPicker" class="planet-picker" role="group" aria-label="Planet wählen">
+              <button class="planet-card" data-planet="nivalis"><b>✦ NIVALIS</b><span>AURORA-EISNACHT</span></button>
+              <button class="planet-card" data-planet="pyra"><b>◑ PYRA</b><span>DOPPELMONDE</span></button>
+              <button class="planet-card" data-planet="verdant"><b>◉ VERDANT</b><span>RINGRIESE</span></button>
+              <button class="planet-card" data-planet="umbra"><b>● UMBRA</b><span>EWIGE EKLIPSE</span></button>
+            </div>
+            <div class="picker-label"><span>02</span> EINSATZGEBIET</div>
+            <div id="missionPicker" class="mission-picker" role="group" aria-label="Karte und Schwierigkeit wählen"></div>
+            <div id="worldBrief" class="world-brief"></div>
+          </div>
+          <div class="start-actions"><button id="startBtn">MISSION STARTEN</button><button id="testBtn">ARSENAL-TEST</button></div>
+        </div>
+        <div id="waveBanner" class="wave-banner"></div>
+      </div>
+
+      <aside class="panel">
+        <div class="statusbar" role="group" aria-label="Statuswerte">
+          <div class="stat-item stat-xp"><small>★ XP</small><strong id="xp">0</strong></div>
+          <div class="stat-item" id="integrityStat"><small>◆ KOL</small><strong id="lives">100</strong></div>
+          <div class="stat-item"><small>⚡ EN</small><strong id="credits">360</strong></div>
+          <div class="stat-item stat-wave"><small>≋ WELLE</small><strong id="wave">0/6</strong><em id="hostiles">0 FEINDE</em></div>
+        </div>
+        <div class="primary-actions">
+          <button id="waveBtn">AUTOWELLEN BEREIT</button>
+          <button id="speedBtn" class="tool-button" aria-label="Spieltempo umschalten" title="Spieltempo umschalten">1×</button>
+        </div>
+        <div id="buildSection" class="arsenal-block">
+          <div class="block-label"><span>⚒ ARSENAL</span><kbd>1–8 · W</kbd></div>
+          <div id="towerList" class="tower-list">
+            <button class="tower-card" data-type="rail" aria-label="Railgun bauen, 145 Energie, LUFT + BODEN" title="Railgun · Durchschlägt fünf Ziele · 145 Energie"><span class="icon rail">⌁</span><i class="target-mark">◈</i><b>RAILGUN</b><em>145</em></button>
+            <button class="tower-card" data-type="drone" aria-label="Drohnennest bauen, 175 Energie, NUR BODEN" title="Drohnennest · Drei mobile Jäger · 175 Energie"><span class="icon drone">✣</span><i class="target-mark">▬</i><b>DROHNE</b><em>175</em></button>
+            <button class="tower-card" data-type="rocket" aria-label="Raketenwerfer bauen, 215 Energie, NUR LUFT" title="Raketenwerfer · Zielsuchender Flächenschaden · 215 Energie"><span class="icon rocket">➤</span><i class="target-mark">▲</i><b>RAKETE</b><em>215</em></button>
+            <button class="tower-card" data-type="mortar" aria-label="Plasma-Mörser bauen, 185 Energie, NUR BODEN" title="Plasma-Mörser · Schwerer Flächenschaden · 185 Energie"><span class="icon mortar">◉</span><i class="target-mark">▬</i><b>MÖRSER</b><em>185</em></button>
+            <button class="tower-card" data-type="laser" aria-label="Pulslaser bauen, 135 Energie, NUR LUFT"><span class="icon laser">╋</span><i class="target-mark">▲</i><b>LASER</b><em>135</em></button>
+            <button class="tower-card" data-type="cryo" aria-label="Kryo-Projektor bauen, 155 Energie, NUR BODEN"><span class="icon cryo">❄</span><i class="target-mark">▬</i><b>KRYO</b><em>155</em></button>
+            <button class="tower-card" data-type="gatling" aria-label="Ion-Gatling bauen, 130 Energie, LUFT + BODEN"><span class="icon gatling">⁙</span><i class="target-mark">◈</i><b>GATLING</b><em>130</em></button>
+            <button class="tower-card" data-type="disruptor" aria-label="Schild-Brecher bauen, 205 Energie, NUR BODEN"><span class="icon disruptor">◇</span><i class="target-mark">▬</i><b>BRECHER</b><em>205</em></button>
+            <button class="tower-card" data-type="wall" aria-label="Feldmauer bauen, 35 Energie" title="Feldmauer · Wegführung und Verlangsamung · 35 Energie"><span class="icon wall">▰</span><b>MAUER</b><em>35</em></button>
+          </div>
+          <button id="codexOpenBtn" class="codex-open" type="button" aria-label="Arsenal-Übersicht öffnen: freischalten und tunen">
+            <span class="codex-open-icon">▤</span>
+            <span class="codex-open-text"><b>ARSENAL-ÜBERSICHT</b><em id="codexHint">TUNEN &amp; NACHSCHLAGEN</em></span>
+            <kbd>I</kbd>
+          </button>
+        </div>
+        <div class="controls">
+          <div id="testControls" class="test-controls" hidden>
+            <label><span>TEST-STUFE</span><select id="testTuneSelect" aria-label="Tuning-Stufe für den Arsenaltest wählen">
+              <option value="zero">LEVEL 0</option>
+              <option value="current">MEIN TUNING</option>
+              <option value="max">VOLL GETUNT</option>
+            </select></label>
+            <label><span>TEST-GEGNER</span><select id="testEnemySelect" aria-label="Gegnertyp für den Arsenaltest wählen">
+              <option value="shard">SONDENDROHNE</option>
+              <option value="runner">ABFANGDROHNE</option>
+              <option value="armored">BELAGERUNGSPANZER</option>
+              <option value="regenerator">REPARATURLÄUFER</option>
+              <option value="splitter">TRÄGERLÄUFER</option>
+              <option value="splinter">MIKRODROHNE</option>
+              <option value="phaser">PHASENGLEITER</option>
+              <option value="elite">KOMMANDOPANZER</option>
+              <option value="mixed">GEMISCHT</option>
+            </select></label>
+          </div>
+          <button id="buildBtn">⚒ BAUEN</button>
+          <button id="exitBtn" class="tool-button" aria-label="Einsatz verlassen und Karte wechseln" title="Einsatz verlassen und Karte wechseln">↩</button>
+          <button id="intelBtn" class="tool-button" aria-label="Feind-Intel anzeigen" title="Feind-Intel">☣</button>
+        </div>
+        <details id="selectionSection" class="panel-section selection-section">
+          <summary><span>⌖ <b id="selectionTitle">AUSWAHL</b></span><i>DETAILS</i></summary>
+          <div id="selection" class="selection"><small>SYSTEMBEREIT</small><p>Turm, Gegner oder Bausymbol auswählen.</p></div>
+        </details>
+        <details id="intelSection" class="panel-section intel-section">
+          <summary><span>☣ FEIND-INTEL</span><i>SCAN</i></summary>
+          <div id="enemyIntel" class="enemy-intel"><p>Neue Organismen werden mit jeder Welle analysiert.</p></div>
+        </details>
+      </aside>
+    </section>
+    <footer><span>STELLAR FRONTIER COMMAND // CLASSIFIED</span><span>TIP: Baue Engpässe, aber keinen vollständigen Wall.</span></footer>
+  </main>
+
+  <div id="rotateHint" class="rotate-hint" hidden><span>↻ Im Querformat spielt es sich angenehmer.</span><button id="rotateHintClose" type="button" aria-label="Hinweis schließen">✕</button></div>
+
+  <div id="missionBackdrop" class="mission-backdrop" hidden></div>
+
+  <div id="codexOverlay" class="settings-overlay" hidden>
+    <div class="codex-panel" role="dialog" aria-modal="true" aria-labelledby="codexTitle">
+      <div class="settings-head">
+        <b id="codexTitle">▤ ARSENAL-ÜBERSICHT</b>
+        <button id="codexCloseBtn" class="settings-close" type="button" aria-label="Übersicht schließen">✕</button>
+      </div>
+      <div class="codex-body">
+        <div class="codex-xp"><span>VERFÜGBARE XP</span><b id="codexXp">0</b></div>
+        <p class="codex-intro">Hier wird freigeschaltet und getunt. <b>Ziel</b> zeigt, was die Waffe überhaupt treffen kann — die häufigste Fehlinvestition.</p>
+        <div id="codexList" class="codex-list"></div>
+        <p class="codex-foot">Feldmauern sind das billigste Bauteil. Eine längere Route allein bringt wenig — führe die Route mehrfach an denselben Türmen vorbei.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="settingsOverlay" class="settings-overlay" hidden>
+    <div class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="settings-head">
+        <b id="settingsTitle">⚙ EINSTELLUNGEN</b>
+        <button id="settingsCloseBtn" class="settings-close" type="button" aria-label="Einstellungen schließen">✕</button>
+      </div>
+      <div class="settings-body">
+        <div class="settings-row">
+          <div class="settings-info">
+            <b>ALS APP INSTALLIEREN</b>
+            <p id="installHint">Icebound lässt sich als eigenständige App auf dem Startbildschirm ablegen.</p>
+          </div>
+          <button id="installBtn" class="settings-action-btn" type="button" hidden>INSTALLIEREN</button>
+        </div>
+        <div id="updateSection">
+          <hr class="settings-divider">
+          <div class="settings-row">
+            <div class="settings-info">
+              <b>APP AKTUALISIEREN</b>
+              <p id="updateHint">Holt die neueste Fassung vom Server und leert den Zwischenspeicher. Der Fortschritt bleibt erhalten.</p>
+            </div>
+            <button id="updateBtn" class="settings-action-btn" type="button">JETZT AKTUALISIEREN</button>
+          </div>
+        </div>
+        <hr class="settings-divider">
+        <div class="settings-row">
+          <div class="settings-info">
+            <b>FORTSCHRITT ZURÜCKSETZEN</b>
+            <p>Löscht dauerhaft gesammelte XP und alle Arsenal-Tunings (aktuell <span id="settingsXpValue">0</span> XP). Der laufende Einsatz endet dabei.</p>
+          </div>
+          <button id="resetProgressBtn" class="settings-danger-btn" type="button">FORTSCHRITT LÖSCHEN</button>
+        </div>
+        <div id="resetConfirm" class="reset-confirm" hidden>
+          <span>Sicher? Das kann nicht rückgängig gemacht werden.</span>
+          <div class="reset-confirm-actions">
+            <button id="resetConfirmBtn" class="reset-confirm-yes" type="button">✓ JA, ZURÜCKSETZEN</button>
+            <button id="resetCancelBtn" type="button">✕ ABBRECHEN</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+  <script src="pwa.js"></script>
+</body>
+</html>

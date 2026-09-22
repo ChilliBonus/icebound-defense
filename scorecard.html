@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Interne visuelle Referenz aller Icebound-Spielelemente.">
+  <title>ICEBOUND // VISUAL SCORECARD</title>
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="scorecard.css">
+</head>
+<body>
+  <header class="topbar">
+    <div><small>INTERNES REFERENZBLATT</small><h1>ICEBOUND <span>// SCORECARD</span></h1></div>
+    <a href="index.html">← ZUM SPIEL</a>
+  </header>
+
+  <main>
+    <section class="intro">
+      <div><b>SO BENUTZT DU DIE SCORECARD</b><p>Nenne bei Änderungswünschen den sichtbaren Namen oder besser den eindeutigen Code, zum Beispiel <code>weapon.drone</code>. Abbildung, Werte und Funktion gehören immer zur selben Karte.</p></div>
+      <label>ELEMENT SUCHEN<input id="search" type="search" placeholder="z. B. Drohnennest, Panzer, Basis …" autocomplete="off"></label>
+    </section>
+
+    <nav id="tabs" class="tabs" aria-label="Elementgruppen">
+      <button class="active" data-tab="all">ALLE</button>
+      <button data-tab="weapon">WAFFEN</button>
+      <button data-tab="enemy">GEGNER</button>
+      <button data-tab="obstacle">HINDERNISSE</button>
+      <button data-tab="scenery">PFLANZEN</button>
+      <button data-tab="world">WELT &amp; BASIS</button>
+    </nav>
+
+    <div id="summary" class="summary"></div>
+    <div id="catalog" class="catalog"></div>
+    <p id="empty" class="empty" hidden>Kein Element passt zu dieser Suche.</p>
+  </main>
+
+  <template id="cardTemplate">
+    <article class="card">
+      <div class="visual"><canvas width="440" height="240"></canvas><span class="group-label"></span></div>
+      <div class="content">
+        <div class="identity"><div><small class="code"></small><h2></h2></div><button class="copy" title="Code kopieren">CODE KOPIEREN</button></div>
+        <p class="description"></p>
+        <dl class="stats"></dl>
+        <div class="aliases"></div>
+      </div>
+    </article>
+  </template>
+
+  <iframe id="gameSource" class="game-source" src="index.html?developer-scorecard" title="Echter Icebound-Spielrenderer" aria-hidden="true"></iframe>
+  <script src="scorecard.js"></script>
+</body>
+</html>
