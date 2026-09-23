@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Build single-file game
+        run: python3 build_single_file.py
+
+      - name: Run tests when present
+        shell: bash
+        run: |
+          set -eu
+          if [ -d tests ]; then
+            python3 -m unittest discover -s tests -p 'test*.py'
+          elif find . -maxdepth 3 -type f \( -name 'test_*.py' -o -name '*_test.py' \) -print -quit | grep -q .; then
+            python3 -m unittest discover -s . -p 'test*.py'
+          else
+            echo 'Keine Tests vorhanden; Build-Prüfung erfolgreich.'
+          fi
