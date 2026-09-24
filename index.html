@@ -25,7 +25,7 @@
         <div class="telemetry"><span><i></i> GRID ONLINE</span><span>SEKTOR <b id="sectorName">N-07</b></span><span id="clock">00:00</span></div>
         <div class="topbar-tools">
           <button id="soundBtn" class="topbar-tool" type="button" aria-label="Musik und Geräusche umschalten" title="Musik und Geräusche umschalten">♫</button>
-          <button id="codexBtn" class="topbar-tool" type="button" aria-label="Arsenal-Übersicht öffnen" title="Arsenal-Übersicht — was kann welche Waffe? (Taste I)">?</button>
+          <button id="codexBtn" class="topbar-tool" type="button" aria-label="Werkstatt öffnen" title="Werkstatt — freischalten, tunen, nachschlagen (Taste I)">?</button>
           <button id="settingsBtn" class="topbar-tool" type="button" aria-label="Einstellungen öffnen" title="Einstellungen">⚙</button>
         </div>
       </div>
@@ -37,8 +37,8 @@
 
         <div id="buildConfirmBar" class="build-confirm-bar" hidden>
           <div class="build-summary"><b id="buildSummaryCount">0 ANLAGEN GEPLANT</b><span id="buildSummaryCost">0 ENERGIE</span></div>
-          <button id="buildCommitBtn" class="build-commit" type="button" aria-label="Bauphase bestätigen" title="Bestätigen">✓</button>
-          <button id="buildDiscardBtn" class="build-discard" type="button" aria-label="Bauphase verwerfen" title="Verwerfen">✕</button>
+          <button id="buildCommitBtn" class="build-commit" type="button" aria-label="Geplante Anlage bauen" title="Bauen">✓</button>
+          <button id="buildDiscardBtn" class="build-discard" type="button" aria-label="Planung verwerfen, sonst Baumodus beenden" title="Verwerfen">✕</button>
         </div>
         <div class="aurora"></div>
         <div class="view-mode"><b>3D</b><span>PERSPECTIVE<br>TACTICAL FEED</span></div>
@@ -88,9 +88,9 @@
             <button class="tower-card" data-type="disruptor" aria-label="Schild-Brecher bauen, 205 Energie, NUR BODEN"><span class="icon disruptor">◇</span><i class="target-mark">▬</i><b>BRECHER</b><em>205</em></button>
             <button class="tower-card" data-type="wall" aria-label="Feldmauer bauen, 35 Energie" title="Feldmauer · Wegführung und Verlangsamung · 35 Energie"><span class="icon wall">▰</span><b>MAUER</b><em>35</em></button>
           </div>
-          <button id="codexOpenBtn" class="codex-open" type="button" aria-label="Arsenal-Übersicht öffnen: freischalten und tunen">
+          <button id="codexOpenBtn" class="codex-open" type="button" aria-label="Werkstatt öffnen: freischalten und tunen">
             <span class="codex-open-icon">▤</span>
-            <span class="codex-open-text"><b>ARSENAL-ÜBERSICHT</b><em id="codexHint">TUNEN &amp; NACHSCHLAGEN</em></span>
+            <span class="codex-open-text"><b>WERKSTATT</b><em id="codexHint">TUNEN &amp; NACHSCHLAGEN</em></span>
             <kbd>I</kbd>
           </button>
         </div>
@@ -137,8 +137,8 @@
   <div id="codexOverlay" class="settings-overlay" hidden>
     <div class="codex-panel" role="dialog" aria-modal="true" aria-labelledby="codexTitle">
       <div class="settings-head">
-        <b id="codexTitle">▤ ARSENAL-ÜBERSICHT</b>
-        <button id="codexCloseBtn" class="settings-close" type="button" aria-label="Übersicht schließen">✕</button>
+        <b id="codexTitle">⚒ WERKSTATT</b>
+        <button id="codexCloseBtn" class="settings-close" type="button" aria-label="Werkstatt schließen">✕</button>
       </div>
       <div class="codex-body">
         <div class="codex-xp"><span>VERFÜGBARE XP</span><b id="codexXp">0</b></div>

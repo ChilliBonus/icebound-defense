@@ -2,6 +2,11 @@
   'use strict';
   const canvas = document.querySelector('#game');
   const W=1000,H=650,CELL=50,COLS=20,ROWS=13;
+  /* Die obersten zwei Rasterreihen liegen optisch in der Bergkette. Dort
+     gebaute Tuerme standen im Hang statt in der Ebene, deshalb beginnt das
+     Spielfeld erst bei ROW_TOP. Missionswerte oberhalb davon zieht playRow
+     beziehungsweise baseRow ins Feld. */
+  const ROW_TOP=2,PLAY_ROWS=ROWS-ROW_TOP;
   const DPR=Math.min(2,window.devicePixelRatio||1);
   canvas.width=W*DPR;canvas.height=H*DPR;
   let ctx = canvas.getContext('2d',{alpha:false});
@@ -175,7 +180,7 @@
       spawnInterval: 1.35,
       intermission: 4.50,
       waveReward: 300,
-      laneRows: [1, 4, 7, 10],
+      laneRows: [2, 5, 8, 11],
       towerRowOffset: 1,
       leftTowerColumn: 3,
       rightTowerColumn: 16,
@@ -299,6 +304,14 @@
      Bildrate reduziert. Waffenmodelle bleiben unabhängig davon vollständig. */
   const PERFORMANCE_TUNING={slowFrameMs:30,recoveredFrameMs:24,reduceAt:8,minimalAt:9.2,minimalRestoreAt:6,restoreAt:2,pressureGain:.35,pressureRecovery:.15,neutralRecovery:.025};
   let state,last=0,lastRender=0,sceneTime=0,mouse={x:0,y:0,gx:0,gy:0},selected=null,selectedTowerId=null,selectedEnemyId=null,speed=1,terrainReady=false,gridReady=false,renderDetail=2,framePressure=0,uiNext=0,uiSnapshot='',intelSnapshot='',placementCache={key:'',valid:false};
+  /* Vorschau-Simulationen (Werkstatt, Scorecard) benutzen dieselbe Schusslogik
+     wie das Spiel. Ohne diesen Schalter wuerden neun Miniaturtuerme gleichzeitig
+     Feuergeraeusche ausloesen. */
+  let silentSimulation=false;
+  /* Der Bau-Schemen folgt dem Mauszeiger. Auf dem Touchscreen gibt es keinen
+     Zeiger — dort blieb er nach dem letzten Tippen stehen und sah aus wie ein
+     bereits gebauter Turm. Deshalb nur bei echter Maus zeichnen. */
+  let pointerIsMouse=false;
   function updatePerformanceMode(gap){const tuning=PERFORMANCE_TUNING;if(gap>tuning.slowFrameMs)framePressure=Math.min(10,framePressure+tuning.pressureGain);else if(gap<tuning.recoveredFrameMs)framePressure=Math.max(0,framePressure-tuning.pressureRecovery);else framePressure=Math.max(0,framePressure-tuning.neutralRecovery);if(renderDetail===2&&framePressure>=tuning.reduceAt)renderDetail=1;else if(renderDetail===1&&framePressure>=tuning.minimalAt)renderDetail=0;else if(renderDetail===0&&framePressure<=tuning.minimalRestoreAt)renderDetail=1;else if(renderDetail===1&&framePressure<=tuning.restoreAt)renderDetail=2}
   globalThis.ICEBOUND_PERFORMANCE={settings:PERFORMANCE_TUNING,status:()=>({detail:renderDetail===2?'FULL':renderDetail===1?'REDUCED':'MINIMAL',towerModels:'FULL',pressure:+framePressure.toFixed(2)})};
   const audio={ctx:null,master:null,music:null,sfx:null,limiter:null,room:null,roomGain:null,noise:null,muted:false,beat:0,step:0,voices:0,last:{}};
@@ -376,19 +389,23 @@
   function arsenalEnemyLabel(kind=state?.testEnemyType){return kind==='mixed'?'GEMISCHT':(enemyTypes[kind]||enemyTypes[GAME_BALANCE.arsenalTest.enemyType]).name}
   function arsenalEnemyKindForBatch(batchIndex=0){const selected=state?.testEnemyType||GAME_BALANCE.arsenalTest.enemyType;if(selected!=='mixed'&&TEST_ENEMY_TYPES.includes(selected))return selected;const waveOffset=Math.max(0,(state?.wave||1)-1)*GAME_BALANCE.arsenalTest.batchesPerWave;return TEST_ENEMY_TYPES[(waveOffset+batchIndex)%TEST_ENEMY_TYPES.length]}
   function clamp(value,min,max){return Math.max(min,Math.min(max,value))}
-  function missionSpawnPoints(mission){const count=GAME_BALANCE.spawnLineCount[mission.level]||1,offsets=GAME_BALANCE.spawnLineOffsets[count]||[0],rows=[...new Set(offsets.map(offset=>((mission.spawnY+offset)%ROWS+ROWS)%ROWS))];return rows.slice(0,count).map(y=>({x:0,y}))}
+  /* Jede Zeilenangabe laeuft hierdurch, damit nichts oberhalb des Spielfelds
+     landet. Die Basis braucht zusaetzlich Platz fuer ihr 3x3-Feld. */
+  function playRow(row){return clamp(row,ROW_TOP,ROWS-1)}
+  function baseRow(row){return clamp(row,ROW_TOP+1,ROWS-2)}
+  function missionSpawnPoints(mission){const count=GAME_BALANCE.spawnLineCount[mission.level]||1,offsets=GAME_BALANCE.spawnLineOffsets[count]||[0],start=playRow(mission.spawnY),rows=[...new Set(offsets.map(offset=>ROW_TOP+(((start-ROW_TOP+offset)%PLAY_ROWS)+PLAY_ROWS)%PLAY_ROWS))];return rows.slice(0,count).map(y=>({x:0,y}))}
   function reserveRoute(mission,start=spawn,laneIndex=0){
-    const cells=new Set(),layout=mission.layout+laneIndex*17,waypoints=[start,{x:4,y:clamp(start.y+Math.round((seeded(layout,71)-.5)*5),0,ROWS-1)},{x:9,y:clamp(2+Math.floor(seeded(layout,72)*9),1,11)},{x:14,y:clamp(mission.baseY+Math.round((seeded(layout,73)-.5)*7),1,11)},base];let current={...start};cells.add(key(current.x,current.y));
+    const cells=new Set(),layout=mission.layout+laneIndex*17,waypoints=[start,{x:4,y:playRow(start.y+Math.round((seeded(layout,71)-.5)*5))},{x:9,y:playRow(ROW_TOP+Math.floor(seeded(layout,72)*PLAY_ROWS))},{x:14,y:playRow(baseRow(mission.baseY)+Math.round((seeded(layout,73)-.5)*7))},base];let current={...start};cells.add(key(current.x,current.y));
     waypoints.slice(1).forEach((target,index)=>{const walk=(axis)=>{while(current[axis]!==target[axis]){current[axis]+=Math.sign(target[axis]-current[axis]);cells.add(key(current.x,current.y))}};(layout+index)%2?(walk('y'),walk('x')):(walk('x'),walk('y'))});
     return cells
   }
   function buildMapObstacles(planet,mission){
     const reserved=new Set(),cells=new Map(),density=mission.level==='FINAL'?12:mission.level==='SCHWER'?10:mission.level==='MITTEL'?8:6,shapes=[[[0,0],[1,0],[0,1]],[[0,0],[0,1],[0,2]],[[0,0],[1,0],[2,0]],[[0,0],[1,0],[1,1]],[[0,0],[-1,1],[1,1]]];spawnPoints.forEach((point,index)=>reserveRoute(mission,point,index).forEach(cell=>reserved.add(cell)));
-    for(let i=0;i<density;i++){const anchorX=2+Math.floor(seeded(worldSeed+i,80)*15),anchorY=1+Math.floor(seeded(worldSeed+i,81)*11),shape=shapes[(mission.layout+i)%shapes.length];for(let part=0;part<shape.length;part++){const [dx,dy]=shape[part],x=anchorX+dx,y=anchorY+dy,k=key(x,y);if(x<2||x>16||y<0||y>=ROWS||cells.has(k)||reserved.has(k)||Math.abs(x-base.x)<=1&&Math.abs(y-base.y)<=1)continue;const layout=GAME_BALANCE.obstacleLayout,radius=layout.neighborRadius||1,neighborTypes=new Set();if(layout.preventSameTypeNeighbors)for(let nx=x-radius;nx<=x+radius;nx++)for(let ny=y-radius;ny<=y+radius;ny++){const neighbor=cells.get(key(nx,ny));if(neighbor)neighborTypes.add(neighbor.type)}const start=(i+mission.layout+part*2)%planet.obstacleTypes.length,type=Array.from({length:planet.obstacleTypes.length},(_,offset)=>planet.obstacleTypes[(start+offset)%planet.obstacleTypes.length]).find(candidate=>!neighborTypes.has(candidate));if(!type)continue;cells.set(k,{x,y,type,seed:worldSeed+i*17+part*11})}}
+    for(let i=0;i<density;i++){const anchorX=2+Math.floor(seeded(worldSeed+i,80)*15),anchorY=ROW_TOP+Math.floor(seeded(worldSeed+i,81)*PLAY_ROWS),shape=shapes[(mission.layout+i)%shapes.length];for(let part=0;part<shape.length;part++){const [dx,dy]=shape[part],x=anchorX+dx,y=anchorY+dy,k=key(x,y);if(x<2||x>16||y<ROW_TOP||y>=ROWS||cells.has(k)||reserved.has(k)||Math.abs(x-base.x)<=1&&Math.abs(y-base.y)<=1)continue;const layout=GAME_BALANCE.obstacleLayout,radius=layout.neighborRadius||1,neighborTypes=new Set();if(layout.preventSameTypeNeighbors)for(let nx=x-radius;nx<=x+radius;nx++)for(let ny=y-radius;ny<=y+radius;ny++){const neighbor=cells.get(key(nx,ny));if(neighbor)neighborTypes.add(neighbor.type)}const start=(i+mission.layout+part*2)%planet.obstacleTypes.length,type=Array.from({length:planet.obstacleTypes.length},(_,offset)=>planet.obstacleTypes[(start+offset)%planet.obstacleTypes.length]).find(candidate=>!neighborTypes.has(candidate));if(!type)continue;cells.set(k,{x,y,type,seed:worldSeed+i*17+part*11})}}
     return [...cells.values()]
   }
   function configureWorld(){
-    const planet=activePlanet(),mission=activeMission();worldSeed=planet.seed+mission.seed;base={x:18,y:mission.baseY};spawnPoints=missionSpawnPoints(mission);spawn=spawnPoints[0];obstacles=buildMapObstacles(planet,mission);
+    const planet=activePlanet(),mission=activeMission();worldSeed=planet.seed+mission.seed;base={x:18,y:baseRow(mission.baseY)};spawnPoints=missionSpawnPoints(mission);spawn=spawnPoints[0];obstacles=buildMapObstacles(planet,mission);
     scenery=Array.from({length:12},(_,i)=>{const edge=i%2===0,x=edge?18+seeded(worldSeed+i,90)*150:832+seeded(worldSeed+i,90)*150,y=35+seeded(worldSeed+i,91)*(H-55);return{x,y,h:22+seeded(worldSeed+i,92)*42,s:6+seeded(worldSeed+i,93)*8,c:planet.theme.crystal}});
     flora=Array.from({length:14},(_,i)=>{const side=i%4,x=side===0?70+seeded(worldSeed+i,94)*150:side===1?780+seeded(worldSeed+i,94)*150:160+seeded(worldSeed+i,94)*680,y=45+seeded(worldSeed+i,95)*(H-65);return{x,y,s:.55+seeded(worldSeed+i,96)*.62,lean:(seeded(worldSeed+i,97)-.5)*.25,kind:planet.flora,seed:worldSeed+i}});
     groundPatches=Array.from({length:32},(_,i)=>{const x=seeded(worldSeed+i,1)*W,y=20+seeded(worldSeed+i,2)*(H-32),field=terrainFractalNoise(x,y,41);return{x,y,rx:48+seeded(worldSeed+i,3)*118,ry:20+seeded(worldSeed+i,4)*58,tone:Math.min(7,Math.floor((field*.7+seeded(worldSeed+i,5)*.3)*8)),angle:(seeded(worldSeed+i,6)-.5)*1.35,material:Math.floor(seeded(worldSeed+i,7)*3),opacity:.64+seeded(worldSeed+i,8)*.34,seed:worldSeed+i}});
@@ -427,7 +444,7 @@
   function tone(freq,duration=.12,volume=.08,wave='sine',bus='sfx',delay=0,finish=freq,options={}){if(!reserveAudioVoice())return;const ac=audio.ctx,start=ac.currentTime+delay,osc=ac.createOscillator(),gain=ac.createGain(),attack=Math.max(.0005,Math.min(duration*.35,options.attack??.002)),filter=options.filter?ac.createBiquadFilter():null;osc.type=wave;osc.frequency.setValueAtTime(Math.max(20,freq),start);osc.frequency.exponentialRampToValueAtTime(Math.max(20,finish),start+duration);gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),start+attack);gain.gain.exponentialRampToValueAtTime(.0001,start+duration);if(filter){filter.type=options.filter.type||'lowpass';filter.frequency.value=options.filter.frequency||1800;filter.Q.value=options.filter.q||.7;osc.connect(filter);filter.connect(gain)}else osc.connect(gain);routeAudio(gain,bus,options.room||0,options.pan||0);osc.onended=()=>audio.voices=Math.max(0,audio.voices-1);osc.start(start);osc.stop(start+duration+.025)}
   function noise(duration=.18,volume=.08,frequency=480,delay=0,options={}){if(!audio.noise||!reserveAudioVoice())return;const ac=audio.ctx,start=ac.currentTime+delay,source=ac.createBufferSource(),filter=ac.createBiquadFilter(),gain=ac.createGain(),attack=Math.max(.0005,Math.min(duration*.35,options.attack??.001));source.buffer=audio.noise;source.loop=true;source.playbackRate.value=options.playbackRate||1;filter.type=options.type||'lowpass';filter.frequency.value=Math.max(30,frequency);filter.Q.value=options.q||.7;gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),start+attack);gain.gain.exponentialRampToValueAtTime(.0001,start+duration);source.connect(filter);filter.connect(gain);routeAudio(gain,'sfx',options.room||0,options.pan||0);source.onended=()=>audio.voices=Math.max(0,audio.voices-1);source.start(start,Math.random()*.6);source.stop(start+duration+.02)}
   function playWeaponShot(name,pan=0){const profile=WEAPON_AUDIO_PROFILES[name];if(!profile)return;const pitch=1+(Math.random()*2-1)*profile.jitter,loudness=.95+Math.random()*.1;for(const layer of profile.layers){if(layer.optional&&audio.voices>22)continue;if(layer.source==='tone'){const frequency=layer.frequency*pitch,finish=(layer.end??layer.frequency)*pitch;tone(frequency,layer.duration,layer.volume*loudness,layer.wave||'sine','sfx',layer.delay||0,finish,{attack:layer.attack,room:layer.room,pan,filter:layer.cutoff?{type:layer.filterMode||'lowpass',frequency:layer.cutoff*pitch,q:layer.q||.7}:null})}else noise(layer.duration,layer.volume*loudness,layer.frequency*pitch,layer.delay||0,{type:layer.mode||'lowpass',q:layer.q||.7,attack:layer.attack,room:layer.room,pan,playbackRate:pitch})}}
-  function sound(name,worldX=null){if(!audio.ctx||audio.muted)return;const now=audio.ctx.currentTime,profile=WEAPON_AUDIO_PROFILES[name],gaps={kill:.055,rocketImpact:.1,mortarImpact:.1,breach:.25},gap=profile?.gap??gaps[name]??0;if(now-(audio.last[name]??-9)<gap)return;audio.last[name]=now;const pan=worldX==null?0:clamp((worldX/W-.5)*1.35,-.72,.72);if(profile){playWeaponShot(name,pan);return}if(name==='build'){tone(190,.12,.08,'triangle');tone(360,.18,.055,'sine','sfx',.06)}else if(name==='upgrade'){tone(260,.12,.08,'triangle');tone(390,.14,.07,'triangle','sfx',.08);tone(590,.2,.055,'sine','sfx',.17)}else if(name==='demolish'){tone(150,.2,.08,'sawtooth','sfx',0,70,{room:.08});noise(.24,.085,520,.03,{room:.12});tone(320,.12,.04,'triangle','sfx',.18,180)}else if(name==='rocketImpact'){noise(.04,.15,2600,0,{type:'bandpass',q:.65,attack:.0005,room:.12,pan});tone(58,.38,.14,'sine','sfx',0,27,{room:.22,pan});noise(.42,.072,620,.018,{type:'lowpass',q:.5,attack:.002,room:.38,pan})}else if(name==='mortarImpact'){noise(.055,.12,1700,0,{type:'bandpass',q:.75,attack:.0007,room:.14,pan});tone(74,.31,.11,'triangle','sfx',0,34,{room:.26,pan});tone(310,.14,.033,'sine','sfx',.012,125,{room:.2,pan});noise(.32,.052,480,.024,{type:'lowpass',q:.55,room:.32,pan})}else if(name==='kill'){tone(420,.07,.025,'triangle','sfx',0,250)}else if(name==='split'){tone(310,.16,.05,'square','sfx',0,570)}else if(name==='breach'){tone(46,.65,.16,'sawtooth','sfx',0,25,{room:.18});noise(.5,.16,310,0,{room:.24})}else if(name==='wave'){tone(150,.25,.07,'triangle');tone(225,.25,.065,'triangle','sfx',.13);tone(300,.34,.06,'triangle','sfx',.26)}else if(name==='victory'){[220,277,330,440].forEach((f,i)=>tone(f,.55,.065,'triangle','sfx',i*.16))}else if(name==='defeat'){[110,82,55].forEach((f,i)=>tone(f,.55,.08,'sawtooth','sfx',i*.18,35))}}
+  function sound(name,worldX=null){if(!audio.ctx||audio.muted||silentSimulation)return;const now=audio.ctx.currentTime,profile=WEAPON_AUDIO_PROFILES[name],gaps={kill:.055,rocketImpact:.1,mortarImpact:.1,breach:.25},gap=profile?.gap??gaps[name]??0;if(now-(audio.last[name]??-9)<gap)return;audio.last[name]=now;const pan=worldX==null?0:clamp((worldX/W-.5)*1.35,-.72,.72);if(profile){playWeaponShot(name,pan);return}if(name==='build'){tone(190,.12,.08,'triangle');tone(360,.18,.055,'sine','sfx',.06)}else if(name==='upgrade'){tone(260,.12,.08,'triangle');tone(390,.14,.07,'triangle','sfx',.08);tone(590,.2,.055,'sine','sfx',.17)}else if(name==='demolish'){tone(150,.2,.08,'sawtooth','sfx',0,70,{room:.08});noise(.24,.085,520,.03,{room:.12});tone(320,.12,.04,'triangle','sfx',.18,180)}else if(name==='rocketImpact'){noise(.04,.15,2600,0,{type:'bandpass',q:.65,attack:.0005,room:.12,pan});tone(58,.38,.14,'sine','sfx',0,27,{room:.22,pan});noise(.42,.072,620,.018,{type:'lowpass',q:.5,attack:.002,room:.38,pan})}else if(name==='mortarImpact'){noise(.055,.12,1700,0,{type:'bandpass',q:.75,attack:.0007,room:.14,pan});tone(74,.31,.11,'triangle','sfx',0,34,{room:.26,pan});tone(310,.14,.033,'sine','sfx',.012,125,{room:.2,pan});noise(.32,.052,480,.024,{type:'lowpass',q:.55,room:.32,pan})}else if(name==='kill'){tone(420,.07,.025,'triangle','sfx',0,250)}else if(name==='split'){tone(310,.16,.05,'square','sfx',0,570)}else if(name==='breach'){tone(46,.65,.16,'sawtooth','sfx',0,25,{room:.18});noise(.5,.16,310,0,{room:.24})}else if(name==='wave'){tone(150,.25,.07,'triangle');tone(225,.25,.065,'triangle','sfx',.13);tone(300,.34,.06,'triangle','sfx',.26)}else if(name==='victory'){[220,277,330,440].forEach((f,i)=>tone(f,.55,.065,'triangle','sfx',i*.16))}else if(name==='defeat'){[110,82,55].forEach((f,i)=>tone(f,.55,.08,'sawtooth','sfx',i*.18,35))}}
   function updateMusic(dt){if(!audio.ctx||audio.muted||!state.started||state.over)return;audio.beat-=dt;if(audio.beat>0)return;const roots=[55,65.41,73.42,49],root=roots[Math.floor(state.wave/2)%roots.length],active=state.waveActive;tone(root,active?1.15:1.7,active?.045:.032,'triangle','music');if(audio.step%2===0)tone(root*(active?3:2),.34,active?.021:.012,'sine','music',.05);if(active&&audio.step%4===3)tone(root*4.5,.12,.014,'square','music',.1);audio.step++;audio.beat=active?.48:.82}
   function toggleAudio(){initAudio();audio.muted=!audio.muted;if(audio.master)audio.master.gain.setTargetAtTime(audio.muted?0:.72,audio.ctx.currentTime,.03);const button=$('#soundBtn');button.textContent=audio.muted?'×':'♫';button.classList.toggle('muted',audio.muted)}
   function key(x,y){return `${x},${y}`}
@@ -436,7 +453,7 @@
   function pathfind(extra,startPoint=spawn){
     const q=[startPoint], prev=new Map([[key(startPoint.x,startPoint.y),null]]), dirs=[[1,0],[0,1],[0,-1],[-1,0]];
     while(q.length){const p=q.shift();if(p.x===base.x&&p.y===base.y){const path=[];let cur=p;while(cur){path.unshift(cur);cur=prev.get(key(cur.x,cur.y))}return path}
-      for(const [dx,dy] of dirs){const n={x:p.x+dx,y:p.y+dy},k=key(n.x,n.y);if(n.x<0||n.y<0||n.x>=COLS||n.y>=ROWS||prev.has(k)||occupied(n.x,n.y,extra)||(n.x===19&&n.y!==base.y))continue;prev.set(k,p);q.push(n)}
+      for(const [dx,dy] of dirs){const n={x:p.x+dx,y:p.y+dy},k=key(n.x,n.y);if(n.x<0||n.y<ROW_TOP||n.x>=COLS||n.y>=ROWS||prev.has(k)||occupied(n.x,n.y,extra)||(n.x===19&&n.y!==base.y))continue;prev.set(k,p);q.push(n)}
     } return null
   }
   function allSpawnRoutes(extra=null){return spawnPoints.map(point=>pathfind(extra,point))}
@@ -502,16 +519,33 @@
   function demolishTower(id){const index=state.towers.findIndex(t=>t.id===id);if(index<0||state.over)return;const tower=state.towers[index];if(state.testMode&&tower.testStation!=null){pulse('PRÜFSTAND BLEIBT FEST INSTALLIERT');return}const type=types[tower.type],refund=towerRefund(tower),c=cellCenter(tower);state.credits+=refund;state.towers.splice(index,1);state.drones=state.drones.filter(d=>d.home.id!==id);selectedTowerId=null;placementCache.key='';closeSelectionSection();updatePaths();if(tower.type==='wall')rebuildWallSystems();state.shocks.push({x:c.x,y:c.y,life:.72,max:.72,color:'#d69b78'});burst(c.x,c.y,'#c89472',18,135);if(state.floaters.length<42)state.floaters.push({x:c.x,y:c.y,z:48,life:.9,max:.9,text:`+${refund} E`,color:'#e8c78d'});sound('demolish');uiSnapshot='';updateSelectionPanel();updateUI();pulse(`${type.name} ABGERISSEN · +${refund} ENERGIE`)}
   function enterBuildPhase(){if(!state.started||state.over||state.buildPhase)return false;if(state.testMode){pulse('ARSENAL-TEST NUTZT FESTE PRÜFSTÄNDE');return false}state.buildPhase=true;state.pending=[];selected=null;selectedTowerId=null;selectedEnemyId=null;placementCache.key='';uiSnapshot='';sound('build');pulse('BAUMODUS · ZEIT ANGEHALTEN');updateSelectionPanel();updateUI();return true}
   function leaveBuildPhase(){state.buildPhase=false;state.pending=[];selected=null;selectedTowerId=null;selectedEnemyId=null;placementCache.key='';uiSnapshot='';closeSelectionSection();updateSelectionPanel();updateUI()}
-  function commitBuild(){if(!state.buildPhase)return;const planned=state.pending.slice(),hadWall=planned.some(p=>p.type==='wall');
-    for(const p of planned){state.credits-=p.cost;const tower={id:state.nextTowerId++,x:p.x,y:p.y,type:p.type,cool:0,angle:0,pulse:1,salvo:0,tuning:{power:0,rate:0,range:0},investment:p.cost,damageDealt:0,kills:0,xpEarned:0};state.towers.push(tower);syncDrones(tower);const c=cellCenter(tower);state.shocks.push({x:c.x,y:c.y,life:.8,max:.8,color:types[p.type].color});burst(c.x,c.y,types[p.type].color,p.type==='wall'?9:18,p.type==='wall'?90:145)}
-    leaveBuildPhase();updatePaths();if(hadWall)rebuildWallSystems();if(planned.length)sound('build');pulse(planned.length?`${planned.length} ANLAGE${planned.length>1?'N':''} ERRICHTET · ZEIT LÄUFT`:'BAUMODUS BEENDET · ZEIT LÄUFT')}
-  function discardBuild(){if(!state.buildPhase)return;const count=state.pending.length;leaveBuildPhase();pulse(count?`${count} PLANUNG${count>1?'EN':''} VERWORFEN · ZEIT LÄUFT`:'BAUMODUS BEENDET · ZEIT LÄUFT')}
-  function removePending(index){const p=state.pending[index];if(!p)return;state.pending.splice(index,1);placementCache.key='';uiSnapshot='';sound('demolish');updateSelectionPanel();updateUI();pulse(`${types[p.type].name} AUS PLANUNG ENTFERNT · +${p.cost} E`)}
+  /* Jede Anlage wird einzeln geplant und einzeln bestaetigt. Der Baumodus bleibt
+     danach offen und die Zeit steht weiter still, sodass mehrere Tuerme
+     nacheinander entstehen koennen — nur eben jeder mit eigener Zusage. */
+  function confirmPending(){if(!state.buildPhase)return;const plan=state.pending[0];
+    if(!plan){pulse('ERST EIN BAUFELD ANTIPPEN');return}
+    state.credits-=plan.cost;const tower={id:state.nextTowerId++,x:plan.x,y:plan.y,type:plan.type,cool:0,angle:0,pulse:1,salvo:0,tuning:{power:0,rate:0,range:0},investment:plan.cost,damageDealt:0,kills:0,xpEarned:0};state.towers.push(tower);syncDrones(tower);const c=cellCenter(tower);state.shocks.push({x:c.x,y:c.y,life:.8,max:.8,color:types[plan.type].color});burst(c.x,c.y,types[plan.type].color,plan.type==='wall'?9:18,plan.type==='wall'?90:145);
+    state.pending=[];placementCache.key='';updatePaths();if(plan.type==='wall')rebuildWallSystems();sound('build');uiSnapshot='';updateSelectionPanel();updateUI();pulse(`${types[plan.type].name} GEBAUT · −${plan.cost} E · ${state.credits} E ÜBRIG`)}
+  function discardBuild(){if(!state.buildPhase)return;const planned=state.pending.length;leaveBuildPhase();pulse(planned?'PLANUNG VERWORFEN · BAUMODUS BEENDET · ZEIT LÄUFT':'BAUMODUS BEENDET · ZEIT LÄUFT')}
+  /* Das Kreuz raeumt zuerst nur die offene Planung weg. Erst wenn nichts mehr
+     geplant ist, beendet es den Baumodus — so laeuft die Zeit nie ueberraschend
+     weiter, waehrend man noch einen Bauplatz sucht. */
+  function cancelPlacement(){if(!state.buildPhase)return;if(state.pending.length){removePending(0);return}discardBuild()}
+  function removePending(index){const p=state.pending[index];if(!p)return;state.pending.splice(index,1);placementCache.key='';uiSnapshot='';sound('demolish');updateSelectionPanel();updateUI();pulse(`${types[p.type].name} VERWORFEN · NICHTS BEZAHLT`)}
   function baseReserved(gx,gy){return Math.abs(gx-base.x)<=1&&Math.abs(gy-base.y)<=1}
   /* Gebaut wird nur, was in der Arsenal-Uebersicht freigeschaltet ist. Die
      Freischaltung selbst kostet ausschliesslich XP und laeuft dort. */
-  function addPending(gx,gy){if(!selected||state.over||!state.buildPhase)return;const towerType=selected,type=types[towerType],cost=towerCost(towerType);if(gx<0||gy<0||gx>=COLS||gy>=ROWS)return;if(!towerAvailable(towerType)){pulse(`${type.name} ERST AB EINER SCHWER-MISSION`);return}if(!towerUnlocked(towerType)){pulse(`${type.name} ERST IM ARSENAL FREISCHALTEN`);return}const budget=availableCredits();if(budget<cost){pulse(`${cost-budget} ENERGIE FEHLEN`);return}if(obstacleAt(gx,gy)){pulse('GELÄNDE BLOCKIERT');return}if(occupied(gx,gy)||spawnPointAt(gx,gy)||baseReserved(gx,gy)){pulse('BAUPLATZ BLOCKIERT');return}
-    if(allSpawnRoutes({x:gx,y:gy}).some(path=>!path)){pulse('EINE ANGRIFFSLINIE WÄRE BLOCKIERT');return}state.pending.push({x:gx,y:gy,type:towerType,cost});placementCache.key='';sound('build');uiSnapshot='';updateSelectionPanel();updateUI();pulse(`${type.name} GEPLANT · ${cost} E · NOCH NICHT GEBAUT`)
+  function addPending(gx,gy){if(!selected||state.over||!state.buildPhase)return;const towerType=selected,type=types[towerType];if(gx<0||gy<ROW_TOP||gx>=COLS||gy>=ROWS)return;if(!towerAvailable(towerType)){pulse(`${type.name} ERST AB EINER SCHWER-MISSION`);return}if(!towerUnlocked(towerType)){pulse(`${type.name} ERST IN DER WERKSTATT FREISCHALTEN`);return}
+    /* Es gibt immer nur eine offene Planung. Preis, Budget und Wegpruefung
+       rechnen deshalb ohne die alte, die hier ersetzt wird. Scheitert der neue
+       Platz, bleibt die bisherige Planung erhalten. */
+    const previous=state.pending;state.pending=[];
+    const cost=towerCost(towerType),reject=message=>{state.pending=previous;placementCache.key='';pulse(message)};
+    if(state.credits<cost){reject(`${cost-state.credits} ENERGIE FEHLEN`);return}
+    if(obstacleAt(gx,gy)){reject('GELÄNDE BLOCKIERT');return}
+    if(occupied(gx,gy)||spawnPointAt(gx,gy)||baseReserved(gx,gy)){reject('BAUPLATZ BLOCKIERT');return}
+    if(allSpawnRoutes({x:gx,y:gy}).some(path=>!path)){reject('EINE ANGRIFFSLINIE WÄRE BLOCKIERT');return}
+    state.pending=[{x:gx,y:gy,type:towerType,cost}];placementCache.key='';sound('build');uiSnapshot='';updateSelectionPanel();updateUI();pulse(`${type.name} · ${cost} E · MIT ✓ BAUEN`)
   }
   function updatePaths(){if(state.testMode){rebuildPathCache();return}state.paths=allSpawnRoutes();state.path=state.paths[0];placementCache.key='';state.enemies.forEach(e=>{if(enemyTypes[e.kind].direct)return;const path=state.paths[e.spawnLane]||state.path;e.path=path;e.pi=nearestPathIndex(e,path)});rebuildPathCache()}
   function nearestPathIndex(e,p){let best=0,dist=1e9;p.forEach((n,i)=>{const c=cellCenter(n),d=(c.x-e.x)**2+(c.y-e.y)**2;if(d<dist){dist=d;best=i}});return Math.min(best+1,p.length-1)}
@@ -663,7 +697,7 @@
   function rebuildPathCache(){
     const active=ctx;ctx=pathCtx;ctx.clearRect(0,0,W,H);drawPath();ctx=active;
   }
-  function rebuildWallSystems(){const zones=new Set(),walls=state.towers.filter(t=>t.type==='wall');for(const wall of walls)for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){const x=wall.x+dx,y=wall.y+dy;if(x>=0&&y>=0&&x<COLS&&y<ROWS)zones.add(key(x,y))}state.wallSlowCells=zones;const active=ctx;ctx=wallCtx;ctx.clearRect(0,0,W,H);walls.slice().sort((a,b)=>a.y-b.y).forEach(w=>{const pulseValue=w.pulse;w.pulse=0;drawTower(w);w.pulse=pulseValue});ctx=active}
+  function rebuildWallSystems(){const zones=new Set(),walls=state.towers.filter(t=>t.type==='wall');for(const wall of walls)for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){const x=wall.x+dx,y=wall.y+dy;if(x>=0&&y>=ROW_TOP&&x<COLS&&y<ROWS)zones.add(key(x,y))}state.wallSlowCells=zones;const active=ctx;ctx=wallCtx;ctx.clearRect(0,0,W,H);walls.slice().sort((a,b)=>a.y-b.y).forEach(w=>{const pulseValue=w.pulse;w.pulse=0;drawTower(w);w.pulse=pulseValue});ctx=active}
   function buildGridCache(){const active=ctx;ctx=gridCtx;ctx.clearRect(0,0,W,H);drawBuildGrid();ctx=active;gridReady=true}
   function drawSelectionMarkers(){ctx.save();if(selectedTowerId){const t=state.towers.find(v=>v.id===selectedTowerId);if(t){const c=cellCenter(t),stats=towerStats(t),color=types[t.type].color;ctx.strokeStyle=color;ctx.lineWidth=2;ctx.globalAlpha=.8;ellipseAt(project(c.x,c.y,3),27,10,'',color);if(stats.range){const segments=renderDetail===2?32:20;ctx.globalAlpha=.18;ctx.setLineDash([5,8]);ctx.beginPath();for(let i=0;i<=segments;i++){const a=i/segments*Math.PI*2,p=project(c.x+Math.cos(a)*stats.range,c.y+Math.sin(a)*stats.range,2);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)}ctx.stroke();if(stats.minRange){ctx.globalAlpha=.22;ctx.beginPath();for(let i=0;i<=segments;i++){const a=i/segments*Math.PI*2,p=project(c.x+Math.cos(a)*stats.minRange,c.y+Math.sin(a)*stats.minRange,2);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)}ctx.stroke()}ctx.setLineDash([])}}}if(selectedEnemyId){const e=state.enemies.find(v=>v.id===selectedEnemyId);if(e){const p=project(e.x,e.y,22),r=e.r+9+Math.sin(sceneTime*6)*2;ctx.strokeStyle='#ffdd83';ctx.globalAlpha=.9;ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<4;i++){const a=i*Math.PI/2;ctx.moveTo(p.x+Math.cos(a)*r,p.y+Math.sin(a)*r*.55);ctx.lineTo(p.x+Math.cos(a)*(r+7),p.y+Math.sin(a)*(r+7)*.55)}ctx.stroke()}}ctx.restore()}
   const renderObjectScratch=[];
@@ -788,7 +822,7 @@
     const theme=activePlanet().theme,top=CAMERA.horizon+18;ctx.save();ctx.beginPath();ctx.rect(0,top,W,H-top);ctx.clip();const warmth=ctx.createLinearGradient(W,0,0,H);warmth.addColorStop(0,theme.warm);warmth.addColorStop(.48,'rgba(255,255,255,.015)');warmth.addColorStop(1,theme.dark+'38');ctx.fillStyle=warmth;ctx.fillRect(0,top,W,H-top);
     const vignette=ctx.createRadialGradient(W*.53,H*.46,180,W*.5,H*.5,690);vignette.addColorStop(.42,'rgba(12,25,23,0)');vignette.addColorStop(1,'rgba(3,8,12,.32)');ctx.fillStyle=vignette;ctx.fillRect(0,top,W,H-top);ctx.restore();
   }
-  function drawBuildGrid(){ctx.save();ctx.globalCompositeOperation='screen';ctx.setLineDash([2,7]);ctx.lineWidth=.7;ctx.strokeStyle='rgba(189,220,216,.09)';for(let x=0;x<=W;x+=CELL){const a=project(x,0,1),b=project(x,H,1);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}for(let y=0;y<=H;y+=CELL){const a=project(0,y,1),b=project(W,y,1);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}ctx.setLineDash([]);ctx.restore()}
+  function drawBuildGrid(){const top=ROW_TOP*CELL;ctx.save();ctx.globalCompositeOperation='screen';ctx.setLineDash([2,7]);ctx.lineWidth=.7;ctx.strokeStyle='rgba(189,220,216,.09)';for(let x=0;x<=W;x+=CELL){const a=project(x,top,1),b=project(x,H,1);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}for(let y=top;y<=H;y+=CELL){const a=project(0,y,1),b=project(W,y,1);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}ctx.setLineDash([]);ctx.restore()}
   function drawWeather(){const planet=activePlanet(),theme=planet.theme;ctx.save();ctx.strokeStyle=theme.weather;ctx.fillStyle=theme.weather;ctx.lineCap='round';const count=renderDetail===0?8:renderDetail===1?14:21;for(let i=0;i<count;i++){const direction=planet.id==='pyra'?-1:1,x=(i*227+sceneTime*(planet.id==='pyra'?18:10+i%4*3))%(W+90)-45,y=(i*91+sceneTime*(planet.id==='pyra'?-9:12+i%3*4)+H+70)%(H+70)-35,len=planet.id==='umbra'?8+i%5:i%9===0?4:1.2;ctx.globalAlpha=.07+(i%5)*.035;ctx.lineWidth=i%9===0?1.2:.7;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-direction*len,y+(planet.id==='pyra'?-len*.8:len*.35));ctx.stroke()}ctx.restore()}
   function drawPath(){
     const routes=state?.testMode&&state.testStations?.length?state.testStations.map(station=>({path:station.path,station,lineIndex:station.index})):(state?.paths?.length?state.paths:[state?.path]).map((path,lineIndex)=>({path,station:null,lineIndex})),theme=activePlanet().theme,highlightActive=!state?.testMode&&routes.length>1;ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
@@ -1005,9 +1039,9 @@
   }
   function drawCrack(c){const center=project(c.x,c.y);ctx.save();ctx.globalAlpha=c.life/3;ctx.strokeStyle='#8cefff';for(let i=0;i<5;i++){const a=i*1.256+c.seed,len=10+((i*13+c.seed*7)%11),end=project(c.x+Math.cos(a)*len,c.y+Math.sin(a)*len);ctx.beginPath();ctx.moveTo(center.x,center.y);ctx.lineTo(end.x,end.y);ctx.stroke()}ctx.restore()}
   function drawShock(s){const t=1-s.life/s.max,r=12+t*65,segments=renderDetail===2?24:renderDetail===1?14:8;ctx.save();ctx.globalAlpha=s.life/s.max;ctx.strokeStyle=s.color;ctx.lineWidth=3;ctx.beginPath();for(let i=0;i<=segments;i++){const a=i/segments*Math.PI*2,p=project(s.x+Math.cos(a)*r,s.y+Math.sin(a)*r,2);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)}ctx.stroke();ctx.restore()}
-  function placementValid(gx,gy){const affordable=!!selected&&availableCredits()>=towerCost(selected),special=spawnPointAt(gx,gy)||baseReserved(gx,gy),inside=gx>=0&&gy>=0&&gx<COLS&&gy<ROWS,cacheKey=`${gx},${gy},${selected},${state.towers.length},${state.pending?.length||0},${affordable}`;if(placementCache.key!==cacheKey){placementCache.key=cacheKey;placementCache.valid=inside&&affordable&&!special&&!occupied(gx,gy)&&allSpawnRoutes({x:gx,y:gy}).every(Boolean)}return placementCache.valid}
-  function drawPending(){if(!state.pending?.length)return;const flicker=.55+.16*Math.sin(sceneTime*4);for(const p of state.pending){const c=cellCenter(p),x=p.x*CELL,y=p.y*CELL;ctx.save();ctx.globalAlpha=.5;poly([project(x,y,2),project(x+CELL,y,2),project(x+CELL,y+CELL,2),project(x,y+CELL,2)],'#8fc9bc22','#8fc9bc');ctx.globalAlpha=flicker;drawTower({id:-1,x:p.x,y:p.y,type:p.type,cool:0,angle:-.62,pulse:0,salvo:0,investment:p.cost,damageDealt:0,kills:0});ctx.globalAlpha=.9;const tag=project(c.x,c.y,46);ctx.fillStyle='#0b1a1f';ctx.strokeStyle='#8fc9bc';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(tag.x,tag.y,11,6,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#cdeee2';ctx.font='700 8px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('PLAN',tag.x,tag.y);ctx.textBaseline='alphabetic';ctx.restore()}}
-  function drawGhost(){if(!selected||mouse.gx<0||mouse.gx>=COLS||mouse.gy<0||mouse.gy>=ROWS)return;const valid=placementValid(mouse.gx,mouse.gy),c=cellCenter({x:mouse.gx,y:mouse.gy}),type=types[selected],color=valid?'#8fc9bc':'#c8615d',x=mouse.gx*CELL,y=mouse.gy*CELL;ctx.save();ctx.globalAlpha=.42;poly([project(x,y,2),project(x+CELL,y,2),project(x+CELL,y+CELL,2),project(x,y+CELL,2)],color+'22',color);if(type.range){const segments=renderDetail===2?28:18;ctx.strokeStyle=color;ctx.setLineDash([8,6]);ctx.beginPath();for(let i=0;i<=segments;i++){const a=i/segments*Math.PI*2,p=project(c.x+Math.cos(a)*type.range,c.y+Math.sin(a)*type.range,2);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)}ctx.stroke();if(type.minRange){ctx.beginPath();for(let i=0;i<=segments;i++){const a=i/segments*Math.PI*2,p=project(c.x+Math.cos(a)*type.minRange,c.y+Math.sin(a)*type.minRange,2);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)}ctx.stroke()}ctx.setLineDash([])}ctx.globalAlpha=valid?.62:.38;drawTower({id:-1,x:mouse.gx,y:mouse.gy,type:selected,cool:0,angle:-.62,pulse:0,salvo:0,investment:type.cost,damageDealt:0,kills:0});ctx.restore()}
+  function placementValid(gx,gy){const affordable=!!selected&&availableCredits()>=towerCost(selected),special=spawnPointAt(gx,gy)||baseReserved(gx,gy),inside=gx>=0&&gy>=ROW_TOP&&gx<COLS&&gy<ROWS,cacheKey=`${gx},${gy},${selected},${state.towers.length},${state.pending?.length||0},${affordable}`;if(placementCache.key!==cacheKey){placementCache.key=cacheKey;placementCache.valid=inside&&affordable&&!special&&!occupied(gx,gy)&&allSpawnRoutes({x:gx,y:gy}).every(Boolean)}return placementCache.valid}
+  function drawPending(){if(!state.pending?.length)return;const flicker=.55+.16*Math.sin(sceneTime*4);for(const p of state.pending){const c=cellCenter(p),x=p.x*CELL,y=p.y*CELL;ctx.save();ctx.globalAlpha=.5;poly([project(x,y,2),project(x+CELL,y,2),project(x+CELL,y+CELL,2),project(x,y+CELL,2)],'#8fc9bc22','#8fc9bc');ctx.globalAlpha=flicker;drawTower({id:-1,x:p.x,y:p.y,type:p.type,cool:0,angle:-.62,pulse:0,salvo:0,investment:p.cost,damageDealt:0,kills:0});ctx.globalAlpha=.9;const tag=project(c.x,c.y,46);ctx.fillStyle='#0b1a1f';ctx.strokeStyle='#8fc9bc';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(tag.x,tag.y,17,6.5,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#cdeee2';ctx.font='700 8px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('BAUEN?',tag.x,tag.y);ctx.textBaseline='alphabetic';ctx.restore()}}
+  function drawGhost(){if(!selected||!pointerIsMouse||mouse.gx<0||mouse.gx>=COLS||mouse.gy<ROW_TOP||mouse.gy>=ROWS)return;const valid=placementValid(mouse.gx,mouse.gy),c=cellCenter({x:mouse.gx,y:mouse.gy}),type=types[selected],color=valid?'#8fc9bc':'#c8615d',x=mouse.gx*CELL,y=mouse.gy*CELL;ctx.save();ctx.globalAlpha=.42;poly([project(x,y,2),project(x+CELL,y,2),project(x+CELL,y+CELL,2),project(x,y+CELL,2)],color+'22',color);if(type.range){const segments=renderDetail===2?28:18;ctx.strokeStyle=color;ctx.setLineDash([8,6]);ctx.beginPath();for(let i=0;i<=segments;i++){const a=i/segments*Math.PI*2,p=project(c.x+Math.cos(a)*type.range,c.y+Math.sin(a)*type.range,2);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)}ctx.stroke();if(type.minRange){ctx.beginPath();for(let i=0;i<=segments;i++){const a=i/segments*Math.PI*2,p=project(c.x+Math.cos(a)*type.minRange,c.y+Math.sin(a)*type.minRange,2);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)}ctx.stroke()}ctx.setLineDash([])}ctx.globalAlpha=valid?.62:.38;drawTower({id:-1,x:mouse.gx,y:mouse.gy,type:selected,cool:0,angle:-.62,pulse:0,salvo:0,investment:type.cost,damageDealt:0,kills:0});ctx.restore()}
   function pulse(text){const b=$('#waveBanner');b.textContent=text;b.classList.remove('show');b.classList.toggle('compact',text.length>28);void b.offsetWidth;b.classList.add('show')}
   function rosterForWave(wave){if(state.testMode)return state.testEnemyType==='mixed'?TEST_ENEMY_TYPES:[arsenalEnemyKindForBatch(0)];const level=activeMission().level,roster=['shard'];if(wave>=2)roster.push('runner');if(wave>=3)roster.push('regenerator');if(wave>=4)roster.push('armored');if(wave>=5)roster.push('splitter');if((level==='SCHWER'||level==='FINAL')&&wave>=6)roster.push('phaser');if(wave===state.maxWaves||wave>=Math.ceil(state.maxWaves*.72))roster.push('elite');return roster}
   function updateEnemyIntel(){const intel=$('#enemyIntel'),counts={};state.enemies.forEach(e=>counts[e.kind]=(counts[e.kind]||0)+1);const signature=`${state.wave}|${state.maxWaves}|${state.endless}|${state.testEnemyType}|${state.started}|${state.over}|${state.waveActive}|${Object.entries(counts).sort().join(';')}`;if(signature===intelSnapshot)return;intelSnapshot=signature;const active=Object.keys(counts);let title,roster;if(active.length){title=`AKTIV · WELLE ${state.wave}`;roster=active}else if(state.started&&!state.over&&(state.endless||state.wave<state.maxWaves)){const next=state.waveActive?state.wave:state.wave+1;title=state.endless?`${state.waveActive?'EINGEHEND':'NÄCHSTE WELLE'} · ${next} / ∞`:`${state.waveActive?'EINGEHEND':'NÄCHSTE WELLE'} · ${next}/${state.maxWaves}`;roster=rosterForWave(next)}else if(state.over){title=state.result==='victory'?'SEKTOR GESÄUBERT':'MISSION BEENDET';roster=[]}else{title='BEKANNTE EIGENSCHAFTEN';roster=['runner','armored','regenerator','splitter','elite']}intel.innerHTML=`<small>${title}</small>${roster.length?`<div class="enemy-roster">${roster.map(kind=>{const e=enemyTypes[kind],count=counts[kind];return`<span class="enemy-chip" title="${e.detail}">${e.name}${count?` ×${count}`:''}<i>${e.short} · −${e.breach}%</i></span>`}).join('')}</div>`:`<p>${state.result==='victory'?'Keine Biosignaturen verbleiben.':'Kolonieverbindung beendet.'}</p>`}`}
@@ -1021,11 +1055,16 @@
   function updateBuildUi(){
     const rail=$('#buildRail'),bar=$('#buildConfirmBar'),buildBtn=$('#buildBtn'),active=!!state.buildPhase;
     if(rail){if(!rail.dataset.ready){rail.innerHTML=buildRailMarkup();rail.dataset.ready='1';rail.addEventListener('click',e=>{const button=e.target.closest?.('[data-build-type]');if(button)setSelected(button.dataset.buildType)})}
-      /* Nur was freigeschaltet ist, taucht ueberhaupt auf. Freischalten laeuft
-         ausschliesslich ueber die Arsenal-Uebersicht. */
-      rail.hidden=!active;if(active)for(const button of rail.querySelectorAll('[data-build-type]')){const type=button.dataset.buildType,cost=towerCost(type),visible=towerAvailable(type)&&towerUnlocked(type);button.hidden=!visible;if(!visible)continue;button.classList.toggle('active',selected===type);button.classList.toggle('disabled',availableCredits()<cost);const tag=button.querySelector('em'),label=String(cost);if(tag&&tag.textContent!==label)tag.textContent=label}}
-    if(bar){bar.hidden=!active;if(active){const count=state.pending.length,spend=pendingSpend();$('#buildSummaryCount').textContent=count?`${count} ANLAGE${count>1?'N':''} GEPLANT`:'NICHTS GEPLANT';$('#buildSummaryCost').textContent=`${spend} E · ${availableCredits()} E ÜBRIG`}}
-    if(buildBtn){buildBtn.disabled=!state.started||state.over||state.testMode||active;buildBtn.textContent=active?'⚒ BAUPHASE LÄUFT':'⚒ BAUEN'}
+      /* Gesperrtes bleibt sichtbar und zeigt seinen XP-Preis. */
+      rail.hidden=!active;if(active)for(const button of rail.querySelectorAll('[data-build-type]')){const type=button.dataset.buildType,cost=towerCost(type),available=towerAvailable(type),unlocked=towerUnlocked(type);button.classList.toggle('active',selected===type);button.classList.toggle('locked',!available||!unlocked);button.classList.toggle('disabled',available&&unlocked&&availableCredits()<cost);const tag=button.querySelector('em'),label=!available?'🔒':!unlocked?`${unlockXpCost(type)}XP`:String(cost);if(tag&&tag.textContent!==label)tag.textContent=label}}
+    if(bar){bar.hidden=!active;
+      if(active){const plan=state.pending[0],commit=$('#buildCommitBtn'),discard=$('#buildDiscardBtn');
+        $('#buildSummaryCount').textContent=plan?`${types[plan.type].name} HIER BAUEN?`:selected?`${types[selected].name} · BAUFELD ANTIPPEN`:'ANLAGE IM ARSENAL WÄHLEN';
+        $('#buildSummaryCost').textContent=plan?`${plan.cost} E · DANACH ${availableCredits()} E`:`${state.credits} E VERFÜGBAR`;
+        if(commit){commit.disabled=!plan;commit.title=plan?`${types[plan.type].name} für ${plan.cost} E bauen`:'Erst ein Baufeld antippen'}
+        if(discard)discard.title=plan?'Planung verwerfen':'Baumodus beenden, Zeit läuft weiter';
+      }}
+    if(buildBtn){buildBtn.disabled=!state.started||state.over||state.testMode;buildBtn.textContent=active?'⚒ BAUMODUS BEENDEN':'⚒ BAUEN'}
     canvas.parentElement?.classList.toggle('building',active);document.body.classList.toggle('build-active',active);
   }
   function openSelectionSection(title){const section=$('#selectionSection');if(section)section.open=true;setSelectionTitle(title)}
@@ -1038,10 +1077,15 @@
     setSelectionTitle();box.innerHTML='<small>SYSTEMBEREIT</small><p>Turm, Gegner oder Bausymbol auswählen.</p>'
   }
   function clearSelection(){selected=null;selectedTowerId=null;selectedEnemyId=null;placementCache.key='';uiSnapshot='';closeSelectionSection();updateSelectionPanel()}
-  function setSelected(type){if(state.over)return;if(state.testMode){const stationTower=state.towers.find(t=>t.type===type&&t.testStation!=null);if(stationTower){inspectTower(stationTower);return}pulse('IM ARSENAL-TEST SIND NUR WAFFEN-PRÜFSTÄNDE AKTIV');return}if(!state.started){pulse('MISSION ZUERST STARTEN');return}if(!towerAvailable(type)){pulse(`${types[type].name} ERST AB EINER SCHWER-MISSION`);return}if(!state.buildPhase&&!enterBuildPhase())return;if(selected===type){selected=null;placementCache.key='';uiSnapshot='';closeSelectionSection();updateSelectionPanel();updateUI();return}selected=type;selectedTowerId=null;selectedEnemyId=null;placementCache.key='';uiSnapshot='';const buildSection=$('#buildSection');if(buildSection)buildSection.open=true;if(compactLayout())setSelectionTitle(types[type].name);else openSelectionSection(types[type].name);updateSelectionPanel();updateUI()}
+  function setSelected(type){if(state.over)return;
+    if(types[type]&&!towerUnlocked(type)&&types[type].tunable!==false){
+      if(!towerAvailable(type)){pulse(`${types[type].name} ERST AB EINER SCHWER-MISSION`);return}
+      /* Direkt dorthin, wo man es freischalten kann. */
+      pulse(`${types[type].name} ERST FREISCHALTEN · ${unlockXpCost(type)} XP`);openCodex();return}
+    if(state.testMode){const stationTower=state.towers.find(t=>t.type===type&&t.testStation!=null);if(stationTower){inspectTower(stationTower);return}pulse('IM ARSENAL-TEST SIND NUR WAFFEN-PRÜFSTÄNDE AKTIV');return}if(!state.started){pulse('MISSION ZUERST STARTEN');return}if(!towerAvailable(type)){pulse(`${types[type].name} ERST AB EINER SCHWER-MISSION`);return}if(!state.buildPhase&&!enterBuildPhase())return;if(selected===type){selected=null;placementCache.key='';uiSnapshot='';closeSelectionSection();updateSelectionPanel();updateUI();return}selected=type;selectedTowerId=null;selectedEnemyId=null;placementCache.key='';uiSnapshot='';const buildSection=$('#buildSection');if(buildSection)buildSection.open=true;if(compactLayout())setSelectionTitle(types[type].name);else openSelectionSection(types[type].name);updateSelectionPanel();updateUI()}
   function inspectTower(t){selected=null;selectedTowerId=t.id;selectedEnemyId=null;placementCache.key='';uiSnapshot='';openSelectionSection(types[t.type].name);updateUI()}
   function inspectEnemy(e){selected=null;selectedTowerId=null;selectedEnemyId=e.id;placementCache.key='';uiSnapshot='';openSelectionSection(enemyTypes[e.kind].name);updateUI()}
-  function handleCanvasClick(){if(state.buildPhase){const pendingIndex=state.pending.findIndex(p=>p.x===mouse.gx&&p.y===mouse.gy);if(pendingIndex>=0){removePending(pendingIndex);return}const placed=state.towers.find(t=>t.x===mouse.gx&&t.y===mouse.gy);if(placed){inspectTower(placed);return}if(selected){addPending(mouse.gx,mouse.gy);return}pulse('ERST EINE ANLAGE AUS DER BAULEISTE WÄHLEN');return}
+  function handleCanvasClick(){if(state.buildPhase){const pendingIndex=state.pending.findIndex(p=>p.x===mouse.gx&&p.y===mouse.gy);if(pendingIndex>=0){removePending(pendingIndex);return}const placed=state.towers.find(t=>t.x===mouse.gx&&t.y===mouse.gy);if(placed){inspectTower(placed);return}if(selected){addPending(mouse.gx,mouse.gy);return}pulse('ERST EINE ANLAGE IM ARSENAL WÄHLEN');return}
     const tower=state.towers.find(t=>t.x===mouse.gx&&t.y===mouse.gy);if(tower){inspectTower(tower);return}const enemy=state.enemies.map(e=>({e,d:Math.hypot(e.x-mouse.x,e.y-mouse.y)})).filter(v=>v.d<Math.max(24,v.e.r+10)).sort((a,b)=>a.d-b.d)[0];if(enemy)inspectEnemy(enemy.e);else{clearSelection();updateUI()}}
   function developerCatalog(){
     const weapon=Object.fromEntries(Object.entries(types).map(([id,definition])=>[id,{...definition,balance:{...GAME_BALANCE.weapons[id]},tuningPerLevel:{...GAME_BALANCE.tuningPerLevel},maxTuning:MAX_TUNING,renderer:`drawTower(${id})`}]))
@@ -1051,8 +1095,8 @@
   const developerSimulations=new Map();
   function developerEnemy(sim,orbitOffset=0){const def=enemyTypes.shard,maxHp=Math.max(90,towerStats(sim.towers[0]).damage*1.8),orbit=sim.dev.orbit+orbitOffset;return{id:sim.nextEnemyId++,x:sim.dev.cx+Math.cos(orbit)*sim.dev.radius,y:sim.dev.cy+Math.sin(orbit)*sim.dev.radius,angle:orbit+Math.PI/2,kind:'shard',r:def.r,color:def.color,hit:0,phase:orbitOffset,hp:maxHp,maxHp,shield:0,maxShield:0,elite:false,trait:def.short,regen:0,regenDelay:0,split:0,armor:0,reached:false,slowTimer:0,slowFactor:1,baseSpeed:0,speed:0,path:[{x:0,y:0}],pi:0,bounty:0,breach:0,orbitOffset}}
   function developerEnemies(sim){return sim.dev.id==='rocket'?[developerEnemy(sim,0),developerEnemy(sim,.46),developerEnemy(sim,.92)]:[developerEnemy(sim)]}
-  function createDeveloperSimulation(id,time){const cell={x:9,y:7},center=cellCenter(cell),tower={id:9001,x:cell.x,y:cell.y,type:id,cool:0,angle:0,pulse:0,salvo:0,investment:types[id].cost,damageDealt:0,kills:0},sim={started:true,over:false,testMode:false,testStations:[],testTowerIds:new Set(),towers:[tower],drones:[],enemies:[],shots:[],particles:[],floaters:[],shocks:[],cracks:[],wallSlowCells:new Set(),nextEnemyId:9100,shake:0,dev:{id,lastTime:time,cx:center.x,cy:center.y,radius:105,orbit:0,respawn:0}};const realState=state;state=sim;sim.enemies=developerEnemies(sim);syncDrones(tower);state=realState;return sim}
-  function advanceDeveloperSimulation(id,time){let sim=developerSimulations.get(id);if(!sim||time<sim.dev.lastTime||time-sim.dev.lastTime>1){sim=createDeveloperSimulation(id,time);developerSimulations.set(id,sim);return sim}const realState=state;state=sim;let remaining=Math.min(.3,time-sim.dev.lastTime);while(remaining>.0001){const dt=Math.min(1/30,remaining);remaining-=dt;sim.dev.lastTime+=dt;if(sim.enemies.length){sim.dev.orbit+=dt*.72;for(const enemy of sim.enemies){const orbit=sim.dev.orbit+(enemy.orbitOffset||0);enemy.x=sim.dev.cx+Math.cos(orbit)*sim.dev.radius;enemy.y=sim.dev.cy+Math.sin(orbit)*sim.dev.radius;enemy.angle=orbit+Math.PI/2;enemy.phase+=dt*4;const nextAngle=orbit+.08,nextX=sim.dev.cx+Math.cos(nextAngle)*sim.dev.radius,nextY=sim.dev.cy+Math.sin(nextAngle)*sim.dev.radius;enemy.path=[{x:nextX/CELL-.5,y:nextY/CELL-.5}];enemy.pi=0;enemy.hit=Math.max(0,enemy.hit-dt);enemy.wobble=Math.max(0,(enemy.wobble||0)-dt*1.1)}}else{sim.dev.respawn-=dt;if(sim.dev.respawn<=0)sim.enemies=developerEnemies(sim)}const tower=sim.towers[0];tower.cool-=dt;tower.pulse=Math.max(0,tower.pulse-dt*4);const target=sim.enemies[0];if(id!=='drone'&&id!=='wall'&&target&&tower.cool<=0){shoot(tower,target);tower.cool=towerStats(tower).rate}updateDrones(dt);updateShots(dt);sim.particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.z=Math.max(0,p.z+p.vz*dt);p.vz-=120*dt;p.life-=dt});sim.particles=sim.particles.filter(p=>p.life>0);sim.floaters.forEach(f=>{f.z+=28*dt;f.life-=dt});sim.floaters=sim.floaters.filter(f=>f.life>0);sim.shocks.forEach(s=>s.life-=dt);sim.shocks=sim.shocks.filter(s=>s.life>0);const dead=sim.enemies.filter(enemy=>enemy.hp<=0);for(const enemy of dead){sim.shocks.push({x:enemy.x,y:enemy.y,life:.72,max:.72,color:enemy.color});burst(enemy.x,enemy.y,enemy.color,22,180)}if(dead.length){sim.enemies=sim.enemies.filter(enemy=>enemy.hp>0);if(!sim.enemies.length)sim.dev.respawn=1.05}}state=realState;return sim}
+  function createDeveloperSimulation(id,time,radius=105){const cell={x:9,y:7},center=cellCenter(cell),tower={id:9001,x:cell.x,y:cell.y,type:id,cool:0,angle:0,pulse:0,salvo:0,investment:types[id].cost,damageDealt:0,kills:0},sim={started:true,over:false,testMode:false,testStations:[],testTowerIds:new Set(),towers:[tower],drones:[],enemies:[],shots:[],particles:[],floaters:[],shocks:[],cracks:[],wallSlowCells:new Set(),nextEnemyId:9100,shake:0,dev:{id,lastTime:time,cx:center.x,cy:center.y,radius,orbit:0,respawn:0}};const realState=state;state=sim;sim.enemies=developerEnemies(sim);syncDrones(tower);state=realState;return sim}
+  function advanceDeveloperSimulation(id,time,radius=105){const simKey=`${id}@${radius}`;let sim=developerSimulations.get(simKey);if(!sim||time<sim.dev.lastTime||time-sim.dev.lastTime>1){sim=createDeveloperSimulation(id,time,radius);developerSimulations.set(simKey,sim);return sim}const realState=state;state=sim;let remaining=Math.min(.3,time-sim.dev.lastTime);while(remaining>.0001){const dt=Math.min(1/30,remaining);remaining-=dt;sim.dev.lastTime+=dt;if(sim.enemies.length){sim.dev.orbit+=dt*.72;for(const enemy of sim.enemies){const orbit=sim.dev.orbit+(enemy.orbitOffset||0);enemy.x=sim.dev.cx+Math.cos(orbit)*sim.dev.radius;enemy.y=sim.dev.cy+Math.sin(orbit)*sim.dev.radius;enemy.angle=orbit+Math.PI/2;enemy.phase+=dt*4;const nextAngle=orbit+.08,nextX=sim.dev.cx+Math.cos(nextAngle)*sim.dev.radius,nextY=sim.dev.cy+Math.sin(nextAngle)*sim.dev.radius;enemy.path=[{x:nextX/CELL-.5,y:nextY/CELL-.5}];enemy.pi=0;enemy.hit=Math.max(0,enemy.hit-dt);enemy.wobble=Math.max(0,(enemy.wobble||0)-dt*1.1)}}else{sim.dev.respawn-=dt;if(sim.dev.respawn<=0)sim.enemies=developerEnemies(sim)}const tower=sim.towers[0];tower.cool-=dt;tower.pulse=Math.max(0,tower.pulse-dt*4);const target=sim.enemies[0];if(id!=='drone'&&id!=='wall'&&target&&tower.cool<=0){shoot(tower,target);tower.cool=towerStats(tower).rate}updateDrones(dt);updateShots(dt);sim.particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.z=Math.max(0,p.z+p.vz*dt);p.vz-=120*dt;p.life-=dt});sim.particles=sim.particles.filter(p=>p.life>0);sim.floaters.forEach(f=>{f.z+=28*dt;f.life-=dt});sim.floaters=sim.floaters.filter(f=>f.life>0);sim.shocks.forEach(s=>s.life-=dt);sim.shocks=sim.shocks.filter(s=>s.life>0);const dead=sim.enemies.filter(enemy=>enemy.hp<=0);for(const enemy of dead){sim.shocks.push({x:enemy.x,y:enemy.y,life:.72,max:.72,color:enemy.color});burst(enemy.x,enemy.y,enemy.color,22,180)}if(dead.length){sim.enemies=sim.enemies.filter(enemy=>enemy.hp>0);if(!sim.enemies.length)sim.dev.respawn=1.05}}state=realState;return sim}
   function renderDeveloperReference(kind,id,options={}){
     const stage=document.createElement('canvas'),output=document.createElement('canvas');stage.width=W;stage.height=H;output.width=440;output.height=240;
     const previous={ctx,renderDetail,sceneTime,planet:activePlanetId,base,state,selectedTowerId,selectedEnemyId};
@@ -1094,7 +1138,9 @@
     allPaths:()=>state.paths.map(p=>p.map(c=>({x:c.x,y:c.y}))),
     obstacles:()=>obstacles.map(o=>({x:o.x,y:o.y})),
     obstacleColumns:()=>{const cols=new Array(COLS).fill(0);for(const o of obstacles)cols[o.x]++;return cols},
-    map:()=>({base:{...base},spawns:spawnPoints.map(s=>({...s})),cols:COLS,rows:ROWS,cell:CELL}),
+    map:()=>({base:{...base},spawns:spawnPoints.map(s=>({...s})),cols:COLS,rows:ROWS,rowTop:ROW_TOP,cell:CELL}),
+    pending:()=>(state.pending||[]).map(p=>({x:p.x,y:p.y,type:p.type,cost:p.cost})),
+    pointer:()=>({gx:mouse.gx,gy:mouse.gy}),
     canBuild:(gx,gy)=>!obstacleAt(gx,gy)&&!occupied(gx,gy)&&!spawnPointAt(gx,gy)&&!baseReserved(gx,gy),
     routesStayOpen:(gx,gy)=>allSpawnRoutes({x:gx,y:gy}).every(Boolean),
     routeLengths:()=>allSpawnRoutes().map(p=>p?p.length:0),
@@ -1108,33 +1154,44 @@
     enterBuild:()=>enterBuildPhase(),
     plan:(type,gx,gy)=>{if(selected!==type)setSelected(type);const before=state.pending.length;addPending(gx,gy);return state.pending.length>before},
     unplanLast:()=>{if(!state.pending.length)return false;removePending(state.pending.length-1);return true},
-    commit:()=>{commitBuild();return state.towers.length},
+    commit:()=>{confirmPending();return state.towers.length},
     tuneAll:level=>{for(const type of Object.keys(types))if(types[type].tunable!==false)for(const axis of ['power','rate','range'])progress.upgrades[type][axis]=clamp(level,0,MAX_TUNING);saveProgress();state.towers.forEach(t=>syncDrones(t));return progress.upgrades}
   };
   addEventListener('message',event=>{const message=event.data;if(!message||message.channel!=='icebound-scorecard')return;if(message.action==='catalog')event.source?.postMessage({channel:'icebound-scorecard',action:'catalog-result',catalog:developerCatalog()},'*');if(message.action==='render')event.source?.postMessage({channel:'icebound-scorecard',action:'render-result',requestId:message.requestId,image:renderDeveloperReference(message.kind,message.id,message.options)},'*')});
   function updateUI(){
     if(uiSnapshot&&sceneTime<uiNext)return;uiNext=sceneTime+.12;const enemySignature=state.enemies.map(e=>e.kind).sort().join(','),tower=state.towers.find(t=>t.id===selectedTowerId),enemy=state.enemies.find(e=>e.id===selectedEnemyId),station=tower?.testStation!=null?state.testStations[tower.testStation]:null,paused=buildModePaused(),missionComplete=!state.endless&&state.wave>=state.maxWaves,selectionSignature=tower?`${tower.id}:${JSON.stringify(progress.upgrades[tower.type])}:${tower.kills}:${Math.round(tower.damageDealt)}:${station?.depotDamage||0}:${station?.leaks||0}`:enemy?`${enemy.id}:${Math.ceil(enemy.hp)}:${Math.ceil(enemy.shield)}`:'-',testClock=state.testMode?Math.floor(state.testElapsed*2):0,pause=Math.ceil(state.intermission),snapshot=`${state.integrity}|${state.credits}|${state.buildPhase}|${paused}|${state.pending?.length||0}|${pendingSpend()}|${progress.xp}|${state.wave}|${state.maxWaves}|${state.endless}|${enemySignature}|${state.spawnLeft}|${state.testMode}|${state.testTuningMode}|${state.testEnemyType}|${testClock}|${state.started}|${state.waveActive}|${state.over}|${selected}|${selectionSignature}|${pause}|${audio.muted}`;if(snapshot===uiSnapshot)return;uiSnapshot=snapshot;
-    $('#lives').textContent=Math.max(0,Math.ceil(state.integrity));$('#integrityStat').classList.toggle('critical',state.integrity<=35);$('#credits').textContent=state.buildPhase&&pendingSpend()?`${availableCredits()}`:state.credits;$('#xp').textContent=progress.xp;$('#wave').textContent=state.testMode?`TEST ${state.wave} / ∞`:`${state.wave}/${state.maxWaves}`;const pendingSpawns=state.spawnLeft*(state.testMode?(state.testStations?.length||1):1);$('#hostiles').textContent=`${state.enemies.length+pendingSpawns} FEINDE`;
+    $('#lives').textContent=Math.max(0,Math.ceil(state.integrity));$('#integrityStat').classList.toggle('critical',state.integrity<=35);/* Die Anzeige bleibt beim echten Vorrat: Bezahlt wird erst beim Bestaetigen,
+   die Leiste oben nennt den Preis und den Rest danach. */
+    $('#credits').textContent=state.credits;$('#xp').textContent=progress.xp;$('#wave').textContent=state.testMode?`TEST ${state.wave} / ∞`:`${state.wave}/${state.maxWaves}`;const pendingSpawns=state.spawnLeft*(state.testMode?(state.testStations?.length||1):1);$('#hostiles').textContent=`${state.enemies.length+pendingSpawns} FEINDE`;
     const waveBtn=$('#waveBtn'),waveLabel=state.testMode?'TESTWELLE':'WELLE';waveBtn.disabled=!state.started||state.waveActive||missionComplete||state.over||paused;waveBtn.textContent=!state.started?'AUTOWELLEN BEREIT':paused?(state.buildPhase?'BAUMODUS · ZEIT ANGEHALTEN':'TUNING · ZEIT ANGEHALTEN'):state.waveActive?`${waveLabel} ${state.wave} LÄUFT`:missionComplete?'MISSION BEENDET':state.intermission>0?`${waveLabel} ${state.wave+1} IN ${pause}s · JETZT`:`${waveLabel} ${state.wave+1} VORZIEHEN`;const testControls=$('#testControls'),testTuneSelect=$('#testTuneSelect'),testEnemySelect=$('#testEnemySelect'),testControlsDisabled=!state.testMode||!state.started||state.over;testControls.hidden=!state.testMode;testTuneSelect.disabled=testControlsDisabled;testEnemySelect.disabled=testControlsDisabled;if(testTuneSelect.value!==state.testTuningMode)testTuneSelect.value=state.testTuningMode;if(testEnemySelect.value!==state.testEnemyType)testEnemySelect.value=state.testEnemyType;
     updateBuildUi();$('#exitBtn').disabled=!state.started&&!state.over;
-    /* Das Arsenal zeigt ausschliesslich freigeschaltete Anlagen. Was noch fehlt,
-       steht in der Uebersicht und wird dort mit XP freigeschaltet. */
-    let hidden=0;
-    document.querySelectorAll('.tower-card').forEach(b=>{const type=b.dataset.type,cost=towerCost(type),visible=towerAvailable(type)&&towerUnlocked(type);
-      b.hidden=!visible;if(!visible){hidden++;return}
-      b.classList.toggle('disabled',availableCredits()<cost);
-      b.title=`${types[type].name} · ${targetLabel(type)} · ${cost} E`;
-      const priceTag=b.querySelector('em'),label=String(cost);if(priceTag&&priceTag.textContent!==label)priceTag.textContent=label});
-    const hint=$('#codexHint');if(hint){const text=hidden?`${hidden} WEITERE ANLAGE${hidden>1?'N':''} FREISCHALTBAR`:'TUNEN & NACHSCHLAGEN';if(hint.textContent!==text)hint.textContent=text}
+    /* Gesperrte Anlagen bleiben sichtbar, aber ausgegraut und mit ihrem
+       XP-Preis — so sieht man, worauf man sparen kann. Freigeschaltet wird
+       ausschliesslich in der Werkstatt. */
+    let locked=0;
+    document.querySelectorAll('.tower-card').forEach(b=>{const type=b.dataset.type,cost=towerCost(type),available=towerAvailable(type),unlocked=towerUnlocked(type);
+      b.hidden=false;
+      if(!available||!unlocked)locked++;
+      b.classList.toggle('locked',!available||!unlocked);
+      b.classList.toggle('disabled',available&&unlocked&&availableCredits()<cost);
+      b.title=!available?`${types[type].name} · GESPERRT · erst ab einer Schwer-Mission`
+        :!unlocked?`${types[type].name} · GESPERRT · ${targetLabel(type)} · in der Werkstatt für ${unlockXpCost(type)} XP freischalten`
+        :availableCredits()<cost?`${types[type].name} · ${targetLabel(type)} · ${cost} E · es fehlen ${cost-availableCredits()} E`
+        :`${types[type].name} · ${targetLabel(type)} · ${cost} E`;
+      const priceTag=b.querySelector('em'),label=!available?'🔒':!unlocked?`${unlockXpCost(type)} XP`:String(cost);
+      if(priceTag&&priceTag.textContent!==label)priceTag.textContent=label});
+    const hint=$('#codexHint');if(hint){const text=locked?`${locked} ANLAGE${locked>1?'N':''} NOCH GESPERRT`:'TUNEN & NACHSCHLAGEN';if(hint.textContent!==text)hint.textContent=text}
     updateSelectionPanel();updateEnemyIntel()
   }
   function loop(ts){const gap=ts-lastRender;if(gap<15.5){requestAnimationFrame(loop);return}if(lastRender)updatePerformanceMode(gap);const dt=Math.min(.035,(ts-last)/1000||0);last=lastRender=ts;sceneTime=ts/1000;update(dt);draw();requestAnimationFrame(loop)}
   function trackPointer(e){const r=canvas.getBoundingClientRect(),sx=(e.clientX-r.left)*W/r.width,sy=(e.clientY-r.top)*H/r.height,p=unproject(sx,sy);mouse.x=p.x;mouse.y=p.y;mouse.gx=Math.floor(mouse.x/CELL);mouse.gy=Math.floor(mouse.y/CELL)}
   canvas.addEventListener('mousemove',trackPointer);canvas.addEventListener('click',e=>{trackPointer(e);handleCanvasClick()});
+  canvas.addEventListener('pointermove',e=>{pointerIsMouse=e.pointerType==='mouse'});canvas.addEventListener('pointerdown',e=>{pointerIsMouse=e.pointerType==='mouse'});canvas.addEventListener('mouseleave',()=>{pointerIsMouse=false});
   canvas.addEventListener('contextmenu',e=>{e.preventDefault();clearSelection();updateUI()});document.querySelectorAll('.tower-card').forEach(b=>b.addEventListener('click',()=>setSelected(b.dataset.type)));$('#selection').addEventListener('click',e=>{const upgrade=e.target.closest?.('[data-upgrade]'),demolish=e.target.closest?.('[data-demolish]');if(upgrade)upgradeArsenal(upgrade.dataset.upgradeType,upgrade.dataset.upgrade,Number(upgrade.dataset.tower)||null);else if(demolish)demolishTower(Number(demolish.dataset.demolish))});
   function begin(testMode=false){initAudio();if(state.over)reset();state.testMode=testMode;state.endless=testMode;if(testMode){state.credits=2600;state.integrity=state.maxIntegrity;setupArsenalTest()}state.started=true;state.over=false;state.result=null;audio.beat=0;setMissionScreen(false);uiSnapshot='';startWave()}
   function exitMission(){speed=1;$('#speedBtn').textContent='1×';const banner=$('#waveBanner');banner.classList.remove('show');selectWorld(activePlanetId,activeMissionIndex)}
-  /* ARSENAL-UEBERSICHT — zeigt vor dem Kauf, was eine Waffe kann. Alle Werte
+  /* WERKSTATT — freischalten, tunen und nachschlagen. Zeigt vor dem Kauf,
+     was eine Waffe kann. Alle Werte
      kommen aus towerStats(), enthalten also das eigene Tuning und die
      Planetenboni. Die Zielzeile steht bewusst oben: eine Luftwaffe gegen
      Bodengegner ist die teuerste Fehlinvestition im Spiel. */
@@ -1165,6 +1222,56 @@
     const level=progress.upgrades[type][axis],maxed=level>=MAX_TUNING,cost=maxed?0:tuningCost({type},axis);
     const disabled=maxed||progress.xp<cost;
     return `<button class="codex-tune" data-codex-tune="${axis}" data-codex-type="${type}" ${disabled?'disabled':''}>${label} ${level}/${MAX_TUNING}<i>${maxed?'MAX':cost+' XP'}</i></button>`;
+  }
+  /* Werkstatt-Vorschau: statt eines Schriftzeichens laeuft je Waffe eine kleine
+     Live-Szene mit dem echten Turmmodell, das auf ein Ziel feuert. Es ist
+     dieselbe Simulation wie in der Entwickler-Scorecard, nur mit engerem Orbit,
+     stummgeschaltet und auf ein Kaertchen zugeschnitten. */
+  const WORKSHOP_PREVIEW={w:132,h:108,scale:.72,ground:.64,radius:62,fps:24};
+  let workshopPreviewRaf=0,workshopPreviewCanvases=[],workshopPreviewNext=0;
+  function renderWorkshopPreview(canvas,type,time){
+    const paint=canvas._paint||(canvas._paint=canvas.getContext('2d')),{w,h,scale}=WORKSHOP_PREVIEW;
+    const theme=activePlanet().theme,sky=paint.createLinearGradient(0,0,0,h);
+    paint.setTransform(DPR,0,0,DPR,0,0);
+    sky.addColorStop(0,theme.sky[1]);sky.addColorStop(1,theme.ground[1]);
+    paint.fillStyle=sky;paint.fillRect(0,0,w,h);
+    const previous={ctx,state,renderDetail,sceneTime,selectedTowerId,selectedEnemyId,industrial:industrialRendering,silent:silentSimulation};
+    try{
+      silentSimulation=true;
+      const sim=advanceDeveloperSimulation(type,time,WORKSHOP_PREVIEW.radius),center=cellCenter({x:9,y:7}),anchor=project(center.x,center.y,0);
+      paint.setTransform(scale*DPR,0,0,scale*DPR,(w/2-anchor.x*scale)*DPR,(h*WORKSHOP_PREVIEW.ground-anchor.y*scale)*DPR);
+      ctx=paint;state=sim;renderDetail=1;sceneTime=time;selectedTowerId=null;selectedEnemyId=null;
+      const cy=sim.dev.cy;
+      sim.enemies.filter(enemy=>enemy.y<cy).forEach(drawEnemy);
+      drawTower(sim.towers[0]);
+      sim.drones.forEach(drawDrone);
+      sim.enemies.filter(enemy=>enemy.y>=cy).forEach(drawEnemy);
+      drawShots();sim.shocks.forEach(drawShock);
+    }finally{
+      ctx=previous.ctx;state=previous.state;renderDetail=previous.renderDetail;sceneTime=previous.sceneTime;
+      selectedTowerId=previous.selectedTowerId;selectedEnemyId=previous.selectedEnemyId;
+      industrialRendering=previous.industrial;silentSimulation=previous.silent;
+    }
+  }
+  function workshopPreviewTick(ts){
+    const overlay=$('#codexOverlay');
+    if(!overlay||overlay.hidden||!workshopPreviewCanvases.length){workshopPreviewRaf=0;return}
+    workshopPreviewRaf=requestAnimationFrame(workshopPreviewTick);
+    if(ts<workshopPreviewNext)return;
+    workshopPreviewNext=ts+1000/WORKSHOP_PREVIEW.fps;
+    /* Nur zeichnen, was gerade sichtbar ist — gescrollte Karten kosten sonst
+       unnoetig Rechenzeit, besonders auf dem Handy. */
+    const time=ts/1000,viewport=window.innerHeight||0;
+    for(const canvas of workshopPreviewCanvases){
+      const box=canvas.getBoundingClientRect();
+      if(box.bottom<-40||box.top>viewport+40)continue;
+      try{renderWorkshopPreview(canvas,canvas.dataset.preview,time)}
+      catch(_){canvas.hidden=true;workshopPreviewCanvases=workshopPreviewCanvases.filter(item=>item!==canvas)}
+    }
+  }
+  function syncWorkshopPreviews(){
+    workshopPreviewCanvases=[...document.querySelectorAll('#codexList canvas[data-preview]')];
+    if(workshopPreviewCanvases.length&&!workshopPreviewRaf){workshopPreviewNext=0;workshopPreviewRaf=requestAnimationFrame(workshopPreviewTick)}
   }
   function renderCodex(){
     const xpBox=$('#codexXp');if(xpBox)xpBox.textContent=progress.xp;
@@ -1199,13 +1306,14 @@
                +`<span class="codex-note">${genug?'Danach im Arsenal baubar.':`Es fehlen ${cost-progress.xp} XP.`}</span></div>`;
       }else actions=`<div class="codex-actions codex-tuning">${codexTuneButton(type,'power','KRAFT')}${codexTuneButton(type,'rate','TAKT')}${codexTuneButton(type,'range','RANGE')}</div>`;
       return `<div class="codex-item ${available&&unlocked?'':'locked'}">
-        <div class="codex-mark" style="color:${def.color}">${CODEX_GLYPHS[type]||'?'}</div>
+        <div class="codex-mark" style="color:${def.color}"><canvas class="codex-preview" data-preview="${type}" width="${WORKSHOP_PREVIEW.w*DPR}" height="${WORKSHOP_PREVIEW.h*DPR}" aria-hidden="true"></canvas><span class="codex-mark-glyph">${CODEX_GLYPHS[type]||'?'}</span></div>
         <div class="codex-main"><b style="color:${def.color}">${def.name}</b>
           <div class="codex-tags">${tags.join('')}</div>
           <div class="codex-stats">${stats}</div>
           <p>${special?special+' · ':''}${def.detail}</p>${actions}</div></div>`;
     });
     $('#codexList').innerHTML=rows.join('');
+    syncWorkshopPreviews();
   }
   function openCodex(){renderCodex();$('#codexOverlay').hidden=false}
   function closeCodex(){$('#codexOverlay').hidden=true}
@@ -1227,10 +1335,10 @@
     else if(tune)upgradeArsenal(tune.dataset.codexType,tune.dataset.codexTune);
   });
   $('#settingsBtn').addEventListener('click',openSettings);$('#settingsCloseBtn').addEventListener('click',closeSettings);$('#settingsOverlay').addEventListener('click',event=>{if(event.target.id==='settingsOverlay')closeSettings()});$('#resetProgressBtn').addEventListener('click',()=>{$('#resetConfirm').hidden=false});$('#resetCancelBtn').addEventListener('click',()=>{$('#resetConfirm').hidden=true});$('#resetConfirmBtn').addEventListener('click',resetProgress);
-  $('#waveBtn').addEventListener('click',startWave);$('#testTuneSelect').addEventListener('change',event=>setArsenalTuningMode(event.target.value));$('#testEnemySelect').addEventListener('change',event=>setArsenalEnemyType(event.target.value));$('#buildBtn').addEventListener('click',enterBuildPhase);$('#buildCommitBtn').addEventListener('click',commitBuild);$('#buildDiscardBtn').addEventListener('click',discardBuild);$('#exitBtn').addEventListener('click',exitMission);$('#speedBtn').addEventListener('click',()=>{$('#speedBtn').textContent=(speed=speed===1?2:1)+'×'});$('#soundBtn').addEventListener('click',toggleAudio);$('#startBtn').addEventListener('click',()=>begin(false));$('#testBtn').addEventListener('click',()=>begin(true));
+  $('#waveBtn').addEventListener('click',startWave);$('#testTuneSelect').addEventListener('change',event=>setArsenalTuningMode(event.target.value));$('#testEnemySelect').addEventListener('change',event=>setArsenalEnemyType(event.target.value));$('#buildBtn').addEventListener('click',()=>{if(state.buildPhase)discardBuild();else enterBuildPhase()});$('#buildCommitBtn').addEventListener('click',confirmPending);$('#buildDiscardBtn').addEventListener('click',cancelPlacement);$('#exitBtn').addEventListener('click',exitMission);$('#speedBtn').addEventListener('click',()=>{$('#speedBtn').textContent=(speed=speed===1?2:1)+'×'});$('#soundBtn').addEventListener('click',toggleAudio);$('#startBtn').addEventListener('click',()=>begin(false));$('#testBtn').addEventListener('click',()=>begin(true));
   $('#planetPicker').addEventListener('click',event=>{const button=event.target.closest('[data-planet]');if(button)selectWorld(button.dataset.planet,0)});$('#missionPicker').addEventListener('click',event=>{const button=event.target.closest('[data-mission]');if(button)selectWorld(activePlanetId,Number(button.dataset.mission))});
   addEventListener('keydown',e=>{const codex=$('#codexOverlay');
     if(e.code==='KeyI'&&codex&&!e.metaKey&&!e.ctrlKey){e.preventDefault();if(codex.hidden)openCodex();else closeCodex();return}
-    if(e.key==='Escape'){if(codex&&!codex.hidden){closeCodex();return}if(!$('#settingsOverlay').hidden){closeSettings();return}if(state.buildPhase)discardBuild();else{clearSelection();updateUI()}return}if(e.key==='Enter'&&state.buildPhase){e.preventDefault();commitBuild();return}if(e.code==='KeyB'&&!state.buildPhase){e.preventDefault();enterBuildPhase();return}if(/^Digit[1-8]$/.test(e.code)){const towerType=ARSENAL_TYPES[Number(e.code.at(-1))-1];setSelected(towerType)}if(e.code==='KeyW')setSelected('wall');if(e.code==='Space'){e.preventDefault();if(state.buildPhase)commitBuild();else startWave()}});setInterval(()=>{$('#clock').textContent=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})},1000);
+    if(e.key==='Escape'){if(codex&&!codex.hidden){closeCodex();return}if(!$('#settingsOverlay').hidden){closeSettings();return}if(state.buildPhase)cancelPlacement();else{clearSelection();updateUI()}return}if(e.key==='Enter'&&state.buildPhase){e.preventDefault();confirmPending();return}if(e.code==='KeyB'&&!state.buildPhase){e.preventDefault();enterBuildPhase();return}if(/^Digit[1-8]$/.test(e.code)){const towerType=ARSENAL_TYPES[Number(e.code.at(-1))-1];setSelected(towerType)}if(e.code==='KeyW')setSelected('wall');if(e.code==='Space'){e.preventDefault();if(state.buildPhase)confirmPending();else startWave()}});setInterval(()=>{$('#clock').textContent=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})},1000);
   configureWorld();reset();renderWorldPicker();setMissionScreen(true);if(new URLSearchParams(location.search).has('developer-scorecard'))parent.postMessage({channel:'icebound-scorecard',action:'ready'},'*');else requestAnimationFrame(loop);
 })();

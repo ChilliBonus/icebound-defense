@@ -1,0 +1,50 @@
+# Spiegelt jeden Push auf main automatisch in ein Forgejo-Repo (z. B. Codeberg).
+#
+# Einrichtung (einmalig, unter Settings -> Secrets and variables -> Actions):
+#   FORGEJO_REPO_URL  HTTPS-Adresse des Ziel-Repos, z. B.
+#                     https://codeberg.org/<name>/icebound-defense.git
+#   FORGEJO_TOKEN     Zugriffstoken des Forgejo-Kontos mit Schreibrecht auf
+#                     Repositories (Forgejo: Einstellungen -> Anwendungen)
+#
+# Solange die Secrets fehlen, laeuft der Job durch und ueberspringt den Push.
+name: Mirror to Forgejo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-forgejo
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Push nach Forgejo
+        env:
+          FORGEJO_REPO_URL: ${{ secrets.FORGEJO_REPO_URL }}
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+        run: |
+          if [ -z "$FORGEJO_REPO_URL" ] || [ -z "$FORGEJO_TOKEN" ]; then
+            echo "::notice::FORGEJO_REPO_URL oder FORGEJO_TOKEN fehlt, Spiegelung uebersprungen."
+            exit 0
+          fi
+          case "$FORGEJO_REPO_URL" in
+            https://*) ;;
+            *) echo "::error::FORGEJO_REPO_URL muss mit https:// beginnen."; exit 1 ;;
+          esac
+          # Token nur als HTTP-Header uebergeben, nie in die URL oder das Log.
+          AUTH=$(printf 'mirror:%s' "$FORGEJO_TOKEN" | base64 -w0)
+          echo "::add-mask::$AUTH"
+          git -c http.extraHeader="Authorization: Basic $AUTH" \
+            push --force "$FORGEJO_REPO_URL" HEAD:refs/heads/main

@@ -55,3 +55,15 @@ Die Entwickler-Seite `scorecard.html` lädt ihre Abbildungen direkt aus dem echt
 Wie die Missionen ausbalanciert und mit einem Testbot durchgespielt werden, steht in [Docs/BALANCING.md](Docs/BALANCING.md).
 
 Spätere Ausbaustufen: Tower-Synergien, zusätzliche planetenspezifische Gefahren und Gegnertypen mit Resistenzen.
+
+## Automatische Abläufe
+
+Unter `.github/workflows/` liegen drei GitHub Actions:
+
+- **CI** prüft bei jedem Push und Pull Request die Python-Skripte und die JavaScript-Syntax, baut die Single-File-Variante und führt vorhandene Tests aus.
+- **Release** wird von Hand gestartet und veröffentlicht die Single-File-Variante auf GitHub Pages.
+- **Mirror to Forgejo** spiegelt jeden Push auf `main` in ein Forgejo-Repo, etwa auf Codeberg. Dafür im GitHub-Repo unter *Settings → Secrets and variables → Actions* die Secrets `FORGEJO_REPO_URL` (HTTPS-Adresse des Ziel-Repos) und `FORGEJO_TOKEN` (Forgejo-Zugriffstoken mit Schreibrecht) anlegen. Ohne die Secrets überspringt der Workflow die Spiegelung.
+
+## Lizenz
+
+Icebound steht unter der [GNU General Public License v3.0](LICENSE). Du darfst das Spiel nutzen, verändern und weitergeben, auch in veränderter Form, solange es unter derselben Lizenz und mit Quellcode geschieht.

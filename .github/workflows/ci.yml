@@ -22,6 +22,12 @@ jobs:
         with:
           python-version: "3.x"
 
+      - name: Compile Python scripts
+        run: python3 -m py_compile rehost.py rehost_icebound.py build_single_file.py tools/*.py
+
+      - name: Check JavaScript syntax
+        run: for f in game.js pwa.js service-worker.js scorecard.js tools/balance_bot.js; do node --check "$f"; done
+
       - name: Build single-file game
         run: python3 build_single_file.py
 
