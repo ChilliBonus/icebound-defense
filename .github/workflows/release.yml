@@ -1,6 +1,11 @@
 name: Release
 
+# Veroeffentlicht die Spiel-PWA bei jedem Push auf main auf GitHub Pages.
+# Zusaetzlich liegt die Single-File-Variante als icebound-offline.html daneben.
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -23,7 +28,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
       - name: Build single-file game
         run: python3 build_single_file.py
@@ -31,7 +36,10 @@ jobs:
       - name: Prepare Pages artifact
         run: |
           mkdir -p _site
-          cp dist/icebound.html _site/index.html
+          cp index.html game.js pwa.js service-worker.js style.css manifest.webmanifest \
+             scorecard.html scorecard.css scorecard.js LICENSE _site/
+          cp -R icons _site/
+          cp dist/icebound.html _site/icebound-offline.html
           touch _site/.nojekyll
 
       - name: Upload Pages artifact

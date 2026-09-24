@@ -4,7 +4,9 @@ Spielbarer, installierbarer Tower-Defense-Prototyp für den Browser. Die PWA bes
 
 ## Start
 
-Zum Spielen reicht es, `index.html` direkt im Browser zu öffnen. Für Installation und Offline-Cache muss die App über `localhost` oder HTTPS ausgeliefert werden. Im Projektordner:
+Online spielen: <https://chillibonus.github.io/icebound-defense/>. Die Seite lässt sich als App installieren und läuft danach auch offline. Eine einzelne HTML-Datei zum Weitergeben liegt unter [icebound-offline.html](https://chillibonus.github.io/icebound-defense/icebound-offline.html).
+
+Lokal reicht es, `index.html` direkt im Browser zu öffnen. Für Installation und Offline-Cache muss die App über `localhost` oder HTTPS ausgeliefert werden. Im Projektordner:
 
 ```bash
 python3 rehost_icebound.py
@@ -27,6 +29,7 @@ Die Entwickler-Seite `scorecard.html` lädt ihre Abbildungen direkt aus dem echt
 - Auf dem Startbildschirm aktiviert **ARSENAL-TEST** einen vierwelligen Testmodus mit 2600 Energie und sofort gemischten Gegnertypen, damit alle acht Waffen direkt verglichen werden können.
 - Vor Missionsbeginn werden Planet und Einsatzgebiet gewählt. Leichte Einsätze besitzen sieben bis acht, mittlere neun bis zehn und schwere elf Wellen. **Event-Horizont** bildet mit 14 stark eskalierenden Wellen und drei Brutmüttern das herausfordernde Finale.
 - **Nivalis** bringt Sternennacht, Mond und animierte Sonnenwind-Auroren; sein Kryo-Netz verstärkt Feldmauern. **Pyra** zeigt ein Doppelmondsystem über einer glühenden Caldera und vergrößert Raketen- und Mörserexplosionen. **Verdant** liegt unter einem Ringriesen, startet einen zusätzlichen Jäger je Drohnennest und stärkt gegnerische Regeneration. **Umbra** kämpft unter einer totalen Eklipse, gibt Railguns zwei zusätzliche Durchschläge, reduziert aber Energieprämien.
+- Zu Beginn stehen Railgun, Ion-Gatling und Feldmauer bereit. Die übrigen Anlagen werden in der **Werkstatt** (`I` oder Werkstatt-Knopf) mit XP freigeschaltet, sobald eine Schwer-Mission erreichbar ist. Dort werden sie auch getunt.
 - Ein Verteidigungssystem rechts auswählen, bereits im Baumodus mit XP tunen und anschließend beliebig oft nacheinander auf dem Gelände platzieren. Der gewählte Typ bleibt nach jedem Bau aktiv; `Esc`, Rechtsklick oder erneutes Anklicken des Bausymbols beendet den Baumodus. Die Zahlentasten `1` bis `8` wählen Waffen und `W` die Feldmauer.
 - Das schlanke Tactical-Control-Panel zeigt die fünf Bausysteme als Symbolleiste. Auswahl-/Tuningdetails und Feind-Intel lassen sich unabhängig auf- und zuklappen; eine neue Auswahl öffnet automatisch den passenden Detailbereich.
 - Mit `↩` wird der laufende Einsatz vollständig verworfen und die Planeten-/Kartenauswahl geöffnet. Der aktuelle Sektor bleibt markiert, bis ein anderer gewählt wird.
@@ -58,11 +61,10 @@ Spätere Ausbaustufen: Tower-Synergien, zusätzliche planetenspezifische Gefahre
 
 ## Automatische Abläufe
 
-Unter `.github/workflows/` liegen drei GitHub Actions:
+Unter `.github/workflows/` liegen zwei GitHub Actions:
 
 - **CI** prüft bei jedem Push und Pull Request die Python-Skripte und die JavaScript-Syntax, baut die Single-File-Variante und führt vorhandene Tests aus.
-- **Release** wird von Hand gestartet und veröffentlicht die Single-File-Variante auf GitHub Pages.
-- **Mirror to Forgejo** spiegelt jeden Push auf `main` in ein Forgejo-Repo, etwa auf Codeberg. Dafür im GitHub-Repo unter *Settings → Secrets and variables → Actions* die Secrets `FORGEJO_REPO_URL` (HTTPS-Adresse des Ziel-Repos) und `FORGEJO_TOKEN` (Forgejo-Zugriffstoken mit Schreibrecht) anlegen. Ohne die Secrets überspringt der Workflow die Spiegelung.
+- **Release** veröffentlicht bei jedem Push auf `main` die Spiel-PWA auf GitHub Pages, dazu die Single-File-Variante als `icebound-offline.html`.
 
 ## Lizenz
 
