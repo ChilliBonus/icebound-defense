@@ -37,8 +37,8 @@
 
         <div id="buildConfirmBar" class="build-confirm-bar" hidden>
           <div class="build-summary"><b id="buildSummaryCount">0 ANLAGEN GEPLANT</b><span id="buildSummaryCost">0 ENERGIE</span></div>
-          <button id="buildCommitBtn" class="build-commit" type="button" aria-label="Geplante Anlage bauen" title="Bauen">✓</button>
-          <button id="buildDiscardBtn" class="build-discard" type="button" aria-label="Planung verwerfen, sonst Baumodus beenden" title="Verwerfen">✕</button>
+          <button id="buildCommitBtn" class="build-commit" type="button" aria-label="Alle geplanten Anlagen bauen" title="Alle bauen">✓</button>
+          <button id="buildDiscardBtn" class="build-discard" type="button" aria-label="Planung verwerfen und Baumodus beenden" title="Verwerfen">✕</button>
         </div>
         <div class="aurora"></div>
         <div class="view-mode"><b>3D</b><span>PERSPECTIVE<br>TACTICAL FEED</span></div>
@@ -73,20 +73,24 @@
         </div>
         <div class="primary-actions">
           <button id="waveBtn">AUTOWELLEN BEREIT</button>
-          <button id="speedBtn" class="tool-button" aria-label="Spieltempo umschalten" title="Spieltempo umschalten">1×</button>
+          <button id="speedBtn" class="tool-button" aria-label="Spieltempo umschalten: 1×, 2× oder Pause" title="Spieltempo: 1× → 2× → Pause (Taste P)">1×</button>
+        </div>
+        <div id="supportActions" class="support-actions" hidden>
+          <button id="repairBtn" type="button" aria-label="Basis reparieren"><span>✚ REPARATUR</span><em id="repairCost">– E</em></button>
+          <button id="bombBtn" type="button" aria-label="Orbitalschlag auf einen Punkt der Karte"><span>✹ BOMBE</span><em id="bombCost">– E</em></button>
         </div>
         <div id="buildSection" class="arsenal-block">
           <div class="block-label"><span>⚒ ARSENAL</span><kbd>1–8 · W</kbd></div>
           <div id="towerList" class="tower-list">
-            <button class="tower-card" data-type="rail" aria-label="Railgun bauen, 145 Energie, LUFT + BODEN" title="Railgun · Durchschlägt fünf Ziele · 145 Energie"><span class="icon rail">⌁</span><i class="target-mark">◈</i><b>RAILGUN</b><em>145</em></button>
-            <button class="tower-card" data-type="drone" aria-label="Drohnennest bauen, 175 Energie, NUR BODEN" title="Drohnennest · Drei mobile Jäger · 175 Energie"><span class="icon drone">✣</span><i class="target-mark">▬</i><b>DROHNE</b><em>175</em></button>
+            <button class="tower-card" data-type="gatling" aria-label="Ion-Gatling bauen, 120 Energie, NUR BODEN"><span class="icon gatling">⁙</span><i class="target-mark">▬</i><b>GATLING</b><em>120</em></button>
+            <button class="tower-card" data-type="wall" aria-label="Feldmauer bauen, 30 Energie" title="Feldmauer · Wegführung und Verlangsamung · 30 Energie"><span class="icon wall">▰</span><b>MAUER</b><em>30</em></button>
+            <button class="tower-card" data-type="mortar" aria-label="Plasma-Mörser bauen, 175 Energie, NUR BODEN" title="Plasma-Mörser · Schwerer Flächenschaden · 175 Energie"><span class="icon mortar">◉</span><i class="target-mark">▬</i><b>MÖRSER</b><em>175</em></button>
+            <button class="tower-card" data-type="cryo" aria-label="Kryo-Projektor bauen, 150 Energie, NUR BODEN"><span class="icon cryo">❄</span><i class="target-mark">▬</i><b>KRYO</b><em>150</em></button>
+            <button class="tower-card" data-type="laser" aria-label="Pulslaser bauen, 145 Energie, NUR LUFT"><span class="icon laser">╋</span><i class="target-mark">▲</i><b>LASER</b><em>145</em></button>
+            <button class="tower-card" data-type="disruptor" aria-label="Schild-Brecher bauen, 190 Energie, NUR BODEN"><span class="icon disruptor">◇</span><i class="target-mark">▬</i><b>BRECHER</b><em>190</em></button>
             <button class="tower-card" data-type="rocket" aria-label="Raketenwerfer bauen, 215 Energie, NUR LUFT" title="Raketenwerfer · Zielsuchender Flächenschaden · 215 Energie"><span class="icon rocket">➤</span><i class="target-mark">▲</i><b>RAKETE</b><em>215</em></button>
-            <button class="tower-card" data-type="mortar" aria-label="Plasma-Mörser bauen, 185 Energie, NUR BODEN" title="Plasma-Mörser · Schwerer Flächenschaden · 185 Energie"><span class="icon mortar">◉</span><i class="target-mark">▬</i><b>MÖRSER</b><em>185</em></button>
-            <button class="tower-card" data-type="laser" aria-label="Pulslaser bauen, 135 Energie, NUR LUFT"><span class="icon laser">╋</span><i class="target-mark">▲</i><b>LASER</b><em>135</em></button>
-            <button class="tower-card" data-type="cryo" aria-label="Kryo-Projektor bauen, 155 Energie, NUR BODEN"><span class="icon cryo">❄</span><i class="target-mark">▬</i><b>KRYO</b><em>155</em></button>
-            <button class="tower-card" data-type="gatling" aria-label="Ion-Gatling bauen, 130 Energie, LUFT + BODEN"><span class="icon gatling">⁙</span><i class="target-mark">◈</i><b>GATLING</b><em>130</em></button>
-            <button class="tower-card" data-type="disruptor" aria-label="Schild-Brecher bauen, 205 Energie, NUR BODEN"><span class="icon disruptor">◇</span><i class="target-mark">▬</i><b>BRECHER</b><em>205</em></button>
-            <button class="tower-card" data-type="wall" aria-label="Feldmauer bauen, 35 Energie" title="Feldmauer · Wegführung und Verlangsamung · 35 Energie"><span class="icon wall">▰</span><b>MAUER</b><em>35</em></button>
+            <button class="tower-card" data-type="drone" aria-label="Drohnennest bauen, 200 Energie, NUR BODEN" title="Drohnennest · Drei mobile Jäger · 200 Energie"><span class="icon drone">✣</span><i class="target-mark">▬</i><b>DROHNE</b><em>200</em></button>
+            <button class="tower-card" data-type="rail" aria-label="Railgun bauen, 175 Energie, LUFT + BODEN" title="Railgun · Durchschlägt fünf Ziele · 175 Energie"><span class="icon rail">⌁</span><i class="target-mark">◈</i><b>RAILGUN</b><em>175</em></button>
           </div>
           <button id="codexOpenBtn" class="codex-open" type="button" aria-label="Werkstatt öffnen: freischalten und tunen">
             <span class="codex-open-icon">▤</span>

@@ -10,11 +10,14 @@ PAT = {
  'MITTEL': dict(phaser=0, splitter=5, armored=5, regenerator=4, runner=3, eliteLate=1, eliteFinal=3),
  'SCHWER': dict(phaser=7, splitter=5, armored=5, regenerator=4, runner=3, eliteLate=2, eliteFinal=4),
  'FINAL':  dict(phaser=5, splitter=6, armored=4, regenerator=4, runner=3, eliteLate=3, eliteFinal=6)}
+# Wellenzahl wie in game.js (Stand 2026-09: Anfang verkuerzt). Die Aurora-Senke
+# schickt weniger Kommandopanzer; das Modell unten rechnet mit dem Standardmix
+# und ueberschaetzt dort das XP leicht.
 MISSIONS = [
- ('nivalis', 'AURORA-SENKE', 'LEICHT', 12, 1.00), ('nivalis', 'SCHERBENPASS', 'MITTEL', 16, 1.12),
- ('nivalis', 'NULLLICHT-RISS', 'SCHWER', 20, 1.30),
- ('pyra', 'ASCHEHAFEN', 'LEICHT', 12, 1.00), ('pyra', 'CALDERA-KREUZ', 'MITTEL', 16, 1.14),
- ('pyra', 'HOELLENSCHLUND', 'SCHWER', 20, 1.33),
+ ('nivalis', 'AURORA-SENKE', 'LEICHT', 8, 1.00), ('nivalis', 'SCHERBENPASS', 'MITTEL', 12, 1.12),
+ ('nivalis', 'NULLLICHT-RISS', 'SCHWER', 16, 1.30),
+ ('pyra', 'ASCHEHAFEN', 'LEICHT', 10, 1.00), ('pyra', 'CALDERA-KREUZ', 'MITTEL', 14, 1.14),
+ ('pyra', 'HOELLENSCHLUND', 'SCHWER', 18, 1.33),
  ('verdant', 'SPORENHAIN', 'LEICHT', 12, 1.02), ('verdant', 'TITANWURZEL', 'MITTEL', 16, 1.16),
  ('verdant', 'SMARAGD-ABGRUND', 'SCHWER', 20, 1.35),
  ('umbra', 'DAEMMERFELD', 'LEICHT', 12, 1.04), ('umbra', 'EKLIPSENBRUCH', 'MITTEL', 16, 1.20),
@@ -66,18 +69,35 @@ def cum_costs():
 
 
 PER = cum_costs()
-COSTS = dict(rail=145, drone=175, rocket=215, mortar=185, laser=135, cryo=155, gatling=130, disruptor=205)
-UNLOCK = {t: rnd(c * 2.4) for t, c in COSTS.items() if t not in ('rail', 'gatling')}
+COSTS = dict(rail=175, drone=200, rocket=215, mortar=175, laser=145, cryo=150, gatling=120, disruptor=190)
+# Kopie von TOWER_UNLOCKS in game.js: ab welchem Level (1-12) freischaltbar.
+# Starter kosten nichts, der Pulslaser wird automatisch freigeschaltet.
+AVAILABLE = dict(gatling=1, mortar=2, cryo=2, disruptor=3, laser=3, rocket=3, drone=5, rail=6)
+FREE = {'gatling', 'laser'}
+UNLOCK = {t: rnd(c * 2.4) for t, c in COSTS.items() if t not in FREE}
 
 print(f"Tuning je Waffe:  1/1/1={PER[0]}  2/2/2={PER[1]}  3/3/3={PER[2]}  4/4/4={PER[3]}  5/5/5={PER[4]} XP")
 print(f"Alle 8 Waffen:    {[p*8 for p in PER]}")
 print(f"Freischaltungen:  {sum(UNLOCK.values())} XP  {UNLOCK}\n")
 
-cum = 0
-rows = []
+# XP, die vor dem Start von Level n bereits verdient sind (erster Durchlauf).
+before = [0]
 for pid, name, lvl, waves, count in MISSIONS:
+    before.append(before[-1] + mission_xp(waves, count, lvl))
+
+print(f"{'Turm':10} {'XP':>5} {'verfuegbar ab':>14} {'leistbar ab (alle vorher gekauft)':>34}")
+spent = 0
+for t in sorted(AVAILABLE, key=lambda t: (AVAILABLE[t], COSTS[t])):
+    spent += UNLOCK.get(t, 0)
+    level = next((n for n in range(AVAILABLE[t], 13) if before[n - 1] >= spent), None)
+    print(f"{t:10} {UNLOCK.get(t, 0):>5} {'Level ' + str(AVAILABLE[t]):>14} {('Level ' + str(level)) if level else 'nie':>34}")
+print()
+
+rows = []
+for n, (pid, name, lvl, waves, count) in enumerate(MISSIONS, start=1):
     if lvl in ('SCHWER', 'FINAL'):
-        unlock = sum(UNLOCK.values())
+        cum = before[n - 1]
+        unlock = sum(c for t, c in UNLOCK.items() if AVAILABLE[t] <= n)
         rest = cum - unlock
         level = 0
         for i, c in enumerate(PER):
@@ -85,7 +105,7 @@ for pid, name, lvl, waves, count in MISSIONS:
                 level = i + 1
         spent = unlock + (PER[level - 1] * 8 if level else 0)
         rows.append((pid, name, lvl, cum, unlock, level, spent, cum - spent))
-    cum += mission_xp(waves, count, lvl)
+cum = before[-1]
 
 print(f"{'Mission':26} {'XP da':>7} {'Freischalt':>10} {'Tuning':>7} {'ausgegeben':>10} {'Rest':>6}")
 for pid, name, lvl, avail, unlock, level, spent, left in rows:

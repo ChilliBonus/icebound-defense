@@ -172,11 +172,15 @@
       }
       return n;
     };
+    let airExhausted = false;
     const addAir = () => {
       let n = 0;
-      for (const s of S.airSpots(airCount, ok)) {
+      const spots = S.airSpots(airCount, ok);
+      if (!spots.length) airExhausted = true;
+      for (const s of spots) {
         if (air >= airCount) break;
-        const t = air % 2 === 0 ? 'rocket' : 'laser';
+        /* Laser zuerst: guenstiger und ab den ersten Luftgegnern sicher frei. */
+        const t = air % 2 === 0 ? 'laser' : 'rocket';
         if (P.cost(t) > P.credits()) break;
         if (P.plan(t, s.x, s.y)) { air++; n++; }
       }
@@ -225,7 +229,8 @@
       const s = P.snapshot();
       if (s.over || !P.enterBuild()) return;
       const c0 = s.credits;
-      const done = () => { P.commit(); spent += c0 - P.snapshot().credits; };
+      /* Im Baumodus steht die Zeit still: nach dem Bauen wieder verlassen. */
+      const done = () => { P.commit(); P.leaveBuild(); spent += c0 - P.snapshot().credits; };
       if (s.breaches > 0) breached = true;
       const open = opts.openingTowers ?? 4;
       if (towers < open) { addTowers(open - towers); done(); return; }
@@ -236,6 +241,10 @@
           && towers >= (opts.saveAfter ?? 8) && P.credits() < need) { done(); return; }
       if (useMaze && notes.length < maxBarriers) buildBarrier();
       if (air < airCount) addAir();
+      /* Luftgegner kommen ab Welle 4. Solange die Luftabwehr fehlt, wird
+         dafuer gespart statt alles in Bodentuerme zu stecken - sonst reicht die
+         Energie nie fuer einen Luftturm. */
+      if (air < airCount && !airExhausted && s.wave >= 2 && P.credits() < P.cost('laser')) { done(); return; }
       addTowers(99);
       done();
     };
@@ -271,6 +280,73 @@
     P.setSpeed(1);
     P.tuneAll(opts.tune ?? 0);
     return window.__play(opts);
+  };
+
+  /* Kampagnen-Level 1-12 unter realistischen Bedingungen spielen:
+     alle vorherigen Level gelten als geschafft, freigeschaltet ist, was laut
+     TOWER_UNLOCKS bis dahin verfuegbar ist, das Tuning folgt dem XP-Budget
+     eines ersten Durchlaufs (tools/balance_expectation.py), Luftabwehr nur
+     dort, wo Luftgegner kommen (Schwer und Finale).
+       __level(1)                       // Aurora-Senke
+       __level(12, {tune: 5})           // Finale, voll getunt
+       __levels(1, 12)                  // Tabelle aller Level */
+  const CAMPAIGN = [['nivalis',0],['nivalis',1],['nivalis',2],['pyra',0],['pyra',1],['pyra',2],
+                    ['verdant',0],['verdant',1],['verdant',2],['umbra',0],['umbra',1],['umbra',2]];
+  const CAMPAIGN_TUNE = [0,0,1,1,1,2,2,2,3,3,3,4];
+  const CAMPAIGN_AIR = {3:1, 6:2, 9:2, 12:4};
+  const GROUND_ORDER = ['rail','mortar','gatling','disruptor','cryo','drone','rail','gatling','mortar','rail','cryo','disruptor','gatling','drone'];
+  window.__level = function (level, opts = {}) {
+    const [planet, index] = CAMPAIGN[level - 1], rules = P.unlocks();
+    const available = Object.keys(rules.availableFrom).filter(t => rules.availableFrom[t] <= level);
+    P.setProgress({cleared: CAMPAIGN.slice(0, level - 1).map(([p, i]) => p + ':' + i), unlocked: available});
+    const ground = GROUND_ORDER.filter(t => available.includes(t));
+    const r = window.__run(planet, index, {tune: CAMPAIGN_TUNE[level - 1], airCount: CAMPAIGN_AIR[level] || 0, ground, ...opts});
+    return {level, mission: planet + ':' + index, ...r};
+  };
+  window.__levels = function (from = 1, to = 12, opts = {}) {
+    const rows = [];
+    for (let l = from; l <= to; l++) {
+      const r = window.__level(l, opts);
+      rows.push({level: l, mission: r.mission, result: r.result, wave: r.wave, hp: r.hp, breaches: r.breaches, maze: r.maze, eLeft: r.eLeft});
+    }
+    console.table(rows);
+    return rows;
+  };
+
+  /* ARSENAL-RAMPE: Staerkevergleich aller Waffen im Arsenal-Test. Jede Waffe
+     steht allein auf ihrer eigenen Bahn, Welle n schickt n Gegner. Ergebnis ist
+     je Waffe die Welle, in der ihr Lager faellt - je spaeter, desto staerker.
+     Luftwaffen bekommen automatisch Luftgegner und sind deshalb nur
+     untereinander vergleichbar. Laeuft in Haeppchen, weil ein Durchgang
+     laenger dauern kann; bei partial:true einfach __rampContinue() aufrufen.
+       await __ramp('zero', 'mixed')          // ungetunt, gemischte Gegner
+       await __ramp('max', 'mixed', 60, 14)   // voll getunt gegen Welle-14-Gegner
+     Vorher die Seite neu laden: der Test startet aus dem Startbildschirm. */
+  window.__ramp = async function (tune = 'zero', enemy = 'mixed', maxWave = 60, enemyWave = 1) {
+    const B = window.ICEBOUND_BALANCE.settings.arsenalTest;
+    B.enemyWave = enemyWave;
+    const sel = (id, v) => { const e = document.querySelector(id); e.value = v; e.dispatchEvent(new Event('change')); };
+    if (!P.snapshot().started) document.querySelector('#testBtn').click();
+    sel('#testTuneSelect', tune); sel('#testEnemySelect', enemy);
+    window.__rampState = {fail: {}, wave: 0, prevActive: false, maxWave};
+    return window.__rampContinue();
+  };
+  window.__rampContinue = async function (budgetMs = 25000) {
+    const B = window.ICEBOUND_BALANCE.settings.arsenalTest, R = window.__rampState, t0 = performance.now();
+    const total = P.stations().length;
+    while (R.wave < R.maxWave && Object.keys(R.fail).length < total) {
+      let s = P.snapshot();
+      if (!s.waveActive) B.batchesPerWave = s.wave + 1;
+      P.run(1); s = P.snapshot();
+      if (R.prevActive && !s.waveActive) {
+        R.wave = s.wave;
+        for (const st of P.stations()) if (R.fail[st.type] == null && st.depotHp <= 0) R.fail[st.type] = R.wave;
+      }
+      R.prevActive = s.waveActive;
+      if (performance.now() - t0 > budgetMs) return {partial: true, wave: R.wave, fail: R.fail};
+      await new Promise(r => setTimeout(r, 0));
+    }
+    return {wave: R.wave, fail: R.fail};
   };
 
   /* Rohdaten fuer tools/balance_map_svg.py */

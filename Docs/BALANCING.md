@@ -1,7 +1,7 @@
 # Balancing — Ablauf und Werkzeuge
 
 Wie ein Balancing-Run laeuft, welche Zahlen wo stehen und wie man sie prueft.
-Stand: 2026-07-30.
+Stand: 2026-09-25.
 
 ## Grundgedanke der Kurve
 
@@ -11,15 +11,21 @@ Stand: 2026-07-30.
   Entscheidend ist, die Route **mehrfach durch dieselbe Feuerzone zu falten**.
   Deshalb ist die Mauer das billigste Bauteil (30 E) mit fast flacher
   Kostenkurve (`wallCostStep` 0.02 gegen `towerCostStep` 0.15).
-- **Schwierigkeit kommt aus Lebenspunkten**, nie aus der Gegnerzahl: mehr Gegner
-  wuerden automatisch mehr XP und Energie ausschuetten und die Mission selbst
-  entschaerfen.
+- **Die Grundkurve kommt aus Lebenspunkten** (`worldHpRamp`, `mission.hp`).
+  Keine zusaetzlichen Lebenspunkt-Faktoren pro Level: derselbe Gegner soll nicht
+  ohne sichtbaren Grund leichter oder schwerer sein. Einzelne Level werden ueber
+  Wellenzahl und Gegnermix justiert (`mission.waves`, `mission.pattern`). Die
+  Gegnerzahl (`count`) ist ein schwacher Hebel: mehr Gegner schuetten mehr
+  Energie aus, das gleicht sich im Bot-Test fast vollstaendig aus.
 - **Energie ist der einzige Begrenzer der Turmzahl.** Es gibt bewusst keinen
   harten Turm-Deckel; die Energie reicht nicht, um alle Bauplaetze zu fuellen.
   Am Missionsende sollen nur wenige hundert Energie uebrig sein.
-- **XP ist knapp.** Ein Durchlauf der 11 Missionen vor dem Finale deckt rund
-  71 % des Bedarfs fuer alle Freischaltungen plus Volltuning. Der Rest kommt aus
-  etwa drei wiederholten Missionen (~25 % der Level).
+- **XP ist knapp.** Ein Durchlauf aller Missionen deckt rund 82 % des Bedarfs
+  fuer alle Freischaltungen plus Volltuning (`tools/balance_expectation.py`).
+- **Das Arsenal waechst mit der Kampagne.** Start nur mit Ion-Gatling und
+  Feldmauer; wann welcher Turm freischaltbar ist, steht in `TOWER_UNLOCKS` am
+  Anfang von `game.js` (dort, weil der Spielstand vor `GAME_BALANCE` geladen
+  wird). Der Pulslaser wird mit den ersten Luftgegnern automatisch frei.
 
 ## Wo die Zahlen stehen
 
@@ -35,9 +41,13 @@ Alles in `game.js` im Block `GAME_BALANCE`:
 | `waveReward`, `enemies[*].bounty` | Energie-Zufluss. |
 | `UNLOCK_XP_FACTOR` | XP-Preis einer Freischaltung als Vielfaches des Baupreises. Freischalten kostet **nur XP** und laeuft ueber die Arsenal-Uebersicht. |
 | `towerCostStep`, `wallCostStep` | Kostensteigerung je weiterer Anlage. |
+| `baseRepair`, `bomb` | Preis und Wirkung von Basis-Reparatur und Orbitalschlag. Der Bot nutzt beides nicht. |
+| `TOWER_UNLOCKS` | Starter, ab welchem Level ein Turm freischaltbar ist, Auto-Freischaltung. |
 
 Pro Mission in `PLANETS`: `credits` (Startenergie), `hp`, `bounty`, `count`,
-`speed`, `spawn`, `waves`.
+`speed`, `spawn`, `waves` und optional `pattern`, das einzelne Werte aus
+`enemyPattern` ueberschreibt (`eliteLate`, `eliteFinal`, `eliteMid` = die zwei
+Kommandopanzer mitten in der letzten Welle).
 
 ### Reihenfolge beim Nachjustieren
 
@@ -137,6 +147,81 @@ Labyrinth muss ab MITTEL klar verloren werden.
   Lauf ist deshalb kein Beweis; im Zweifel mehrere Karten vergleichen.
 - Der Bot ruestet waehrend einer Mission nicht auf (kein Tuning im Einsatz) und
   reisst nichts ab.
+
+## Kampagne Level fuer Level
+
+```js
+__level(1)                                            // Aurora-Senke unter Kampagnenbedingungen
+__level(1, {openingTowers:2, saveAfter:2, maxBarriers:6})   // frueh ein Labyrinth bauen
+__level(12, {tune:5})                                 // Finale voll getunt
+__levels(1, 12)                                       // Tabelle aller Level
+```
+
+`__level(n)` setzt den Spielstand so, als waeren alle vorherigen Level
+geschafft, schaltet frei, was laut `TOWER_UNLOCKS` bis dahin verfuegbar ist,
+und waehlt Tuning und Luftabwehr nach dem XP-Budget eines ersten Durchlaufs.
+Fuer Vorher-nachher-Vergleiche kann die Testschnittstelle Werte zur Laufzeit
+ueberschreiben: `ICEBOUND_PROBE.override('rail', {cost:145})`,
+`ICEBOUND_PROBE.mission(1, {waves:12})`, `ICEBOUND_PROBE.unlocks()`.
+
+## Turmstaerke im Arsenal-Test
+
+```js
+await __ramp('zero', 'mixed')          // ungetunt, gemischte Gegner
+await __ramp('max', 'mixed', 60, 14)   // voll getunt gegen Gegner der Welle 14
+```
+
+Jede Waffe steht allein auf ihrer Bahn, Welle n schickt n Gegner. Ergebnis ist
+die Welle, in der ihr Lager faellt. Luftwaffen bekommen nur Luftgegner und sind
+nur untereinander vergleichbar. Vorher die Seite neu laden.
+
+Messung 2026-09-25 (alte Werte, Lager faellt in Welle):
+
+| Waffe | ungetunt | voll getunt, Welle-14-Gegner |
+|---|---|---|
+| Railgun | 21 | 6 |
+| Pulslaser (Luft) | 13 | 9 |
+| Schild-Brecher | 12 | 7 |
+| Drohnennest | 11 | 7 |
+| Kryo-Projektor | 10 | 6 |
+| Ion-Gatling | 10 | 7 |
+| Plasma-Moerser | 8 | 6 |
+
+Ungetunt dominierte die Railgun, voll getunt liegen alle nah beieinander.
+Deshalb wurden Preise und Freischaltzeitpunkte geaendert, nicht Schaden oder
+Takt (einzige Ausnahme: Gatling 7 → 9, siehe unten).
+
+## Ergebnis Turm- und Level-Balancing (2026-09-25)
+
+Aenderungen: Start nur Gatling (jetzt nur Boden) und Mauer, Railgun 145 → 175
+ab Level 6, Drohnennest 175 → 200 ab Level 5, Gatling-Schaden 7 → 9, erste
+sechs Level kuerzer (8/12/16/10/14/18 statt 12/16/20/12/16/20 Wellen), in der
+Aurora-Senke nur ein Kommandopanzer in der letzten Welle.
+
+| Level | vorher | nachher |
+|---|---|---|
+| 1 Aurora-Senke | Sieg 12/12, 100 % Integritaet, 0 Durchbrueche | Sieg 8/8, 60 %, 1 Durchbruch |
+| 2 Scherbenpass | Niederlage 16/16 | Niederlage 11/12 |
+| 3 Nulllicht-Riss | Niederlage 16/20 | Niederlage 11/16 |
+| 4 Aschehafen | Sieg 12/12, 100 % | Sieg 10/10, 80 % |
+| 12 Event-Horizont, voll getunt | Niederlage 19/25 | Niederlage 17/25 |
+
+Level 1-3 mit Labyrinth-Taktik (`openingTowers:2, saveAfter:2, maxBarriers:6`).
+Dass der Bot Level 2, 3 und das Finale verliert, war schon vorher so; er spielt
+ordentlich, aber nicht wie ein Mensch.
+
+Erkenntnisse, die man beim naechsten Mal nicht neu herausfinden muss:
+
+- Die Railgun hat den Einstieg allein getragen. Ohne sie war Level 1 im Bot-Test
+  rund dreimal so schwer; der Engpass sind die **Kommandopanzer** (Schild plus
+  Panzerung), gegen die kleine Gatling-Treffer kaum ankommen.
+- Hohe Aufschlaege auf Railgun und Drohnennest (260 / 230) machten das Finale
+  deutlich schwerer (19 → 12 Wellen). Das Finale haengt stark an diesen Preisen.
+- Weil Gatling und Railgun frueher nebenbei Luft abwehrten, braucht es jetzt
+  eigene Luftabwehr. Der Bot baute vorher gar keine (er sparte nie fuer die
+  Rakete); er beginnt jetzt mit dem Laser und spart dafuer.
+- Kuerzere Level bedeuten weniger XP: ein erster Durchlauf erreicht das Finale
+  mit Tuning 3/3/3 statt 4/4/4. Offen, ob das ausgeglichen werden soll.
 
 ## Letztes Ergebnis (2026-07-30)
 

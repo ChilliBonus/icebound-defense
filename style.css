@@ -107,6 +107,7 @@ body.mission-screen .message{top:calc(50% + 38px);max-height:calc(100% - 88px)}
 body.mission-screen{overflow:hidden}
 body.mission-screen .statusbar,
 body.mission-screen .primary-actions,
+body.mission-screen .support-actions,
 body.mission-screen .arsenal-block,
 body.mission-screen .controls,
 body.mission-screen .panel-section,
@@ -136,6 +137,16 @@ body.mission-screen .intel{display:none}
 .primary-actions button:disabled{opacity:.42}
 .primary-actions #waveBtn{border-color:var(--world-accent);box-shadow:inset 0 -2px 0 var(--world-accent)}
 .primary-actions #speedBtn{font-size:14px}
+.primary-actions #speedBtn.paused{border-color:#ffd36a;color:#ffd36a;box-shadow:inset 0 -2px 0 #ffd36a}
+.support-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 6px 6px;background:#223334}
+.support-actions[hidden]{display:none}
+.support-actions button{appearance:none;display:flex;flex-direction:column;align-items:center;gap:2px;border:1px solid #718785;background:#34494a;color:#eaf3ef;font:700 10.5px "Arial Narrow",system-ui,sans-serif;letter-spacing:.08em;padding:7px 4px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.support-actions button em{font-style:normal;font-size:9.5px;letter-spacing:.06em;color:#ffe09a}
+.support-actions button:hover:not(:disabled){background:#4f6b67}
+.support-actions button:disabled{opacity:.42;cursor:not-allowed}
+#repairBtn{border-color:#5aa383}
+#bombBtn{border-color:#c98a4f}
+#bombBtn.armed{background:#6b3f1d;border-color:#ffb35f;box-shadow:inset 0 -2px 0 #ffb35f}
 
 /* Arsenal: dauerhaft offen, nur eine schlanke Beschriftung */
 .arsenal-block{border-top:1px solid #435654;background:#203130}
@@ -208,6 +219,8 @@ body.mission-screen .intel{display:none}
   .stat-item strong{font-size:16px}
   .primary-actions{padding:0 4px 4px}
   .primary-actions button{padding:8px 5px}
+  .support-actions{padding:0 4px 4px;gap:4px}
+  .support-actions button{padding:5px 3px;font-size:9px}
   .block-label{padding:4px 8px}
   .tower-list{grid-template-columns:repeat(3,minmax(0,1fr));padding:4px;gap:3px}
   .tower-card{min-height:40px}
