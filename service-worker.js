@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'icebound-stellar-';
-const CACHE_NAME = `${CACHE_PREFIX}v77`;
+const CACHE_NAME = `${CACHE_PREFIX}v81`;
 const APP_SHELL = [
   './',
   './index.html',

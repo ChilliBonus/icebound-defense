@@ -104,7 +104,7 @@
 
     function baseHint() {
       const prefix = version ? `Installierte Version: ${version}. ` : '';
-      return `${prefix}Holt die neueste Fassung vom Server und leert den Zwischenspeicher. Der Fortschritt bleibt erhalten.`;
+      return `${prefix}Neue Versionen kommen automatisch, sobald du auf dem Auswahlbildschirm bist. Dieser Knopf holt sie sofort. Der Fortschritt bleibt erhalten.`;
     }
 
     function ask(message, timeoutMs) {
@@ -186,7 +186,69 @@
     });
   }
 
+  /* ------------------------------------------------------------ Auto-Update */
+
+  // Sucht selbst nach neuen Fassungen: beim Start, beim Zurueckholen aus dem
+  // Hintergrund und alle zehn Minuten. Eine geaenderte service-worker.js (neuer
+  // CACHE_NAME) installiert sich im Hintergrund und uebernimmt die Seite
+  // (skipWaiting + clients.claim). Dann wird neu geladen — aber nie mitten im
+  // Einsatz, sondern erst auf dem Auswahlbildschirm. Der Fortschritt liegt
+  // getrennt im localStorage und bleibt dabei erhalten.
+  function setupAutoUpdate() {
+    if (isSingleFile || !('serviceWorker' in navigator)) return;
+    let controlled = !!navigator.serviceWorker.controller;
+    let pending = false;
+    let reloading = false;
+    let toast = null;
+    const safeToReload = () => document.body.classList.contains('mission-screen');
+
+    function reloadNow() {
+      if (reloading) return;
+      reloading = true;
+      location.reload();
+    }
+
+    function showToast() {
+      if (toast) return;
+      toast = document.createElement('div');
+      toast.className = 'update-toast';
+      toast.setAttribute('role', 'status');
+      toast.textContent = 'Neue Version bereit – sie wird nach dem Einsatz geladen.';
+      document.body.appendChild(toast);
+    }
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      // Beim allerersten Besuch uebernimmt der Worker die Seite ebenfalls.
+      // Das ist kein Update und darf nicht neu laden.
+      const wasControlled = controlled;
+      controlled = true;
+      if (!wasControlled) return;
+      pending = true;
+      if (safeToReload()) reloadNow();
+      else showToast();
+    });
+
+    new MutationObserver(() => {
+      if (pending && safeToReload()) reloadNow();
+    }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    // Ohne Netz gar nicht erst fragen; ein unerreichbarer Server (lokale
+    // Version im Mobilfunknetz) laesst die Pruefung still scheitern.
+    const check = () => {
+      if (!navigator.onLine) return;
+      navigator.serviceWorker.getRegistration()
+        .then(registration => registration && registration.update())
+        .catch(() => {});
+    };
+    globalThis.addEventListener('load', () => setTimeout(check, 3000));
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') check();
+    });
+    setInterval(check, 10 * 60 * 1000);
+  }
+
   setupInstall();
   setupUpdate();
+  setupAutoUpdate();
   registerServiceWorker();
 })();

@@ -16,7 +16,7 @@ Danach `http://localhost:8446/` öffnen. Der Server braucht nur die Python-Stand
 
 Wer die App als einzelne HTML-Datei weitergeben möchte: [Docs/DISTRIBUTION.md](Docs/DISTRIBUTION.md).
 
-Der `⇩`-Knopf öffnet in unterstützten Chromium-Browsern den Installationsdialog. Auf Safari/iOS und Browsern ohne direkten Installationsdialog zeigt er den passenden Weg über das Teilen- beziehungsweise Browsermenü. Nach dem ersten vollständigen Laden bleibt die App-Hülle offline startbar.
+Der `⇩`-Knopf öffnet in unterstützten Chromium-Browsern den Installationsdialog. Auf Safari/iOS und Browsern ohne direkten Installationsdialog zeigt er den passenden Weg über das Teilen- beziehungsweise Browsermenü. Nach dem ersten vollständigen Laden bleibt die App-Hülle offline startbar. Neue Versionen lädt die App selbst: Sie prüft beim Start, beim Zurückholen aus dem Hintergrund und alle zehn Minuten und lädt auf dem Auswahlbildschirm neu, nie mitten im Einsatz. Der Fortschritt bleibt dabei erhalten.
 
 ## Spielprinzip
 

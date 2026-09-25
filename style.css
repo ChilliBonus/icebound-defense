@@ -217,10 +217,15 @@ body.mission-screen .intel{display:none}
   .statusbar{grid-template-columns:1fr 1fr;padding:4px;gap:3px}
   .stat-item{padding:4px}
   .stat-item strong{font-size:16px}
-  .primary-actions{padding:0 4px 4px}
-  .primary-actions button{padding:8px 5px}
+  /* Aktionsknoepfe einzeilig: im schmalen Panel brachen die Texte sonst um und
+     machten jeden Knopf zwei- bis dreimal so hoch wie noetig. */
+  .primary-actions{grid-template-columns:1fr 38px;gap:4px;padding:0 4px 4px}
+  .primary-actions button{padding:6px 4px;font-size:9.5px;letter-spacing:.05em;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .primary-actions #speedBtn{font-size:12px;padding:6px 0}
   .support-actions{padding:0 4px 4px;gap:4px}
-  .support-actions button{padding:5px 3px;font-size:9px}
+  .support-actions{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .support-actions button{gap:1px;padding:4px 2px;font-size:9px;letter-spacing:.04em;line-height:1.1;white-space:nowrap;overflow:hidden}
+  .support-actions button em{font-size:8.5px}
   .block-label{padding:4px 8px}
   .tower-list{grid-template-columns:repeat(3,minmax(0,1fr));padding:4px;gap:3px}
   .tower-card{min-height:40px}
@@ -363,3 +368,6 @@ body.mission-screen .intel{display:none}
   .codex-open-text em{font-size:8px}
   .codex-open kbd{font-size:8px}
 }
+
+/* Hinweis, dass ein Update nach dem laufenden Einsatz geladen wird (pwa.js). */
+.update-toast{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:60;max-width:min(420px,calc(100vw - 24px));padding:7px 12px;background:#0b222b;border:1px solid var(--world-accent,#8defff);color:#dffcff;font:700 10px "Arial Narrow",system-ui,sans-serif;letter-spacing:.08em;text-align:center;pointer-events:none}
