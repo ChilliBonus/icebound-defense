@@ -180,7 +180,10 @@
       for (const s of spots) {
         if (air >= airCount) break;
         /* Laser zuerst: guenstiger und ab den ersten Luftgegnern sicher frei. */
-        const t = air % 2 === 0 ? 'laser' : 'rocket';
+        /* Nur freigeschaltete Luftwaffen (opts.air): ein gesperrter Turm oeffnet
+           die Werkstatt, und die haelt das Spiel an. */
+        const airTypes = opts.air || ['laser', 'rocket'];
+        const t = airTypes[air % airTypes.length];
         if (P.cost(t) > P.credits()) break;
         if (P.plan(t, s.x, s.y)) { air++; n++; }
       }
@@ -311,6 +314,67 @@
     }
     console.table(rows);
     return rows;
+  };
+
+  /* PLAN-BOT: baut einen festen Bauplan (tools/maze_plans.json) stur in der
+     vorgegebenen Reihenfolge. Reicht die Energie fuer den naechsten Schritt
+     nicht, wird gewartet statt etwas anderes zu bauen. Die Mission muss schon
+     laufen. Liefert Ergebnis, Turmschaden und die Zaehlwerte des Spiels. */
+  /* extra (optional): ist der Plan fertig, wird uebrige Energie ausgegeben,
+     abwechselnd ein Luftturm (extra.air, auf der Fluglinie) und ein Bodenturm
+     (extra.ground, dort wo er die meisten Wegfelder abdeckt). */
+  window.__followPlan = function (plan, extra = null) {
+    const order = plan.order, skipped = [], log = [];
+    let i = 0, lastWave = -1, extras = 0;
+    const always = () => true;
+    const extraSpot = type => {
+      if (type === extra.air) return S.airSpots(12, always).find(s => P.canBuild(s.x, s.y) && P.routesStayOpen(s.x, s.y));
+      const cells = S.routeCells(); let best = null;
+      for (let x = 0; x < COLS; x++) for (let y = 0; y < ROWS; y++) {
+        if (!P.canBuild(x, y) || !P.routesStayOpen(x, y)) continue;
+        const s = S.coverage(type, x, y, cells);
+        if (!best || s > best.s) best = {x, y, s};
+      }
+      return best;
+    };
+    let repairs = 0;
+    const tryBuild = () => {
+      const snap = P.snapshot();
+      if (snap.over) return;
+      /* Wie ein Spieler: faellt die Basis unter 60 % und reicht die Energie,
+         wird zuerst repariert (Kosten steigen mit jeder Reparatur). */
+      if (extra && extra.repair && snap.integrity < 60 && P.repairCost() <= P.credits() && P.repair()) repairs++;
+      if (i < order.length) {
+        if (P.cost(order[i].t) > P.credits() || !P.enterBuild()) return;
+        while (i < order.length && P.cost(order[i].t) <= P.credits()) {
+          const q = order[i++];
+          if (!P.plan(q.t, q.x, q.y)) skipped.push(q.n);
+        }
+        P.commit(); P.leaveBuild();
+        return;
+      }
+      if (!extra || extra.noBuild) return;
+      const kinds = [extra.air, extra.ground].filter(Boolean);
+      const type = kinds[extras % kinds.length];
+      if (P.cost(type) > P.credits()) return;
+      const spot = extraSpot(type);
+      if (!spot || !P.enterBuild()) return;
+      if (P.plan(type, spot.x, spot.y)) extras++;
+      P.commit(); P.leaveBuild();
+    };
+    tryBuild();
+    for (let sec = 0; sec < 3200; sec++) {
+      if (P.snapshot().over) break;
+      tryBuild();
+      P.run(1.0);
+      const s = P.snapshot();
+      if (s.wave !== lastWave) { lastWave = s.wave; log.push({w: s.wave, hp: Math.round(s.integrity), built: i}); }
+    }
+    const s = P.snapshot();
+    return {result: s.result, wave: s.wave + '/' + s.maxWaves, hp: Math.round(s.integrity), breaches: s.breaches,
+            kills: s.kills, built: i, planSteps: order.length, extras, repairs, skipped, eLeft: s.credits,
+            towers: s.towers.map(t => ({t: t.type, x: t.x, y: t.y, dmg: t.dmg, kills: t.kills})),
+            stats: P.stats(), log, routes: s.paths};
   };
 
   /* ARSENAL-RAMPE: Staerkevergleich aller Waffen im Arsenal-Test. Jede Waffe

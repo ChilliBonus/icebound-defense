@@ -11,12 +11,16 @@ Stand: 2026-09-25.
   Entscheidend ist, die Route **mehrfach durch dieselbe Feuerzone zu falten**.
   Deshalb ist die Mauer das billigste Bauteil (30 E) mit fast flacher
   Kostenkurve (`wallCostStep` 0.02 gegen `towerCostStep` 0.15).
-- **Die Grundkurve kommt aus Lebenspunkten** (`worldHpRamp`, `mission.hp`).
-  Keine zusaetzlichen Lebenspunkt-Faktoren pro Level: derselbe Gegner soll nicht
-  ohne sichtbaren Grund leichter oder schwerer sein. Einzelne Level werden ueber
-  Wellenzahl und Gegnermix justiert (`mission.waves`, `mission.pattern`). Die
-  Gegnerzahl (`count`) ist ein schwacher Hebel: mehr Gegner schuetten mehr
-  Energie aus, das gleicht sich im Bot-Test fast vollstaendig aus.
+- **Eine fliessende Kurve ueber die 12 Level** (`levelCurve`): Leben, Tempo,
+  Gegnerzahl und Abstand der Gegner steigen von Level zu Level um denselben
+  Faktor, ohne Saegezahn je Planet. Ein Gegnertyp bringt ueberall dieselbe
+  Energie und dieselben XP; es gibt keine weiteren Faktoren je Mission.
+  Einzelne Level werden ueber Wellenzahl und Gegnermix justiert
+  (`mission.waves`, `mission.pattern`, `mission.earlyLight`).
+- **Planeten-Eigenschaften bleiben** (`PLANETS[].mods`) als Teil des
+  Planeten-Charakters: Pyra Gegner 4 % schneller, Verdant 2 % langsamer und
+  Reparatur ×1,35, Umbra 2 % schneller und Energieprämien ×0,88 (plus die
+  Turm-Eigenschaften je Planet wie Mauerbremse oder Railgun-Durchschuss).
 - **Energie ist der einzige Begrenzer der Turmzahl.** Es gibt bewusst keinen
   harten Turm-Deckel; die Energie reicht nicht, um alle Bauplaetze zu fuellen.
   Am Missionsende sollen nur wenige hundert Energie uebrig sein.
@@ -33,9 +37,8 @@ Alles in `game.js` im Block `GAME_BALANCE`:
 
 | Schraube | Wirkung |
 |---|---|
-| `worldHpRamp` | Lebenspunkte je Planet. Der Haupthebel fuer den Verlauf ueber die Kampagne. |
+| `levelCurve` | Je Level: Leben, Tempo, Gegnerzahl, Abstand der Gegner. Die ganze Kampagnen-Steigerung in einer Tabelle. |
 | `enemyHpLateStep` | Ab Welle 6 zusaetzlicher HP-Zuwachs pro Welle. Trifft **nur das Endspiel**. |
-| `levelDifficulty` | Lebenspunkte, Gegnerzahl und Tempo je Stufe. |
 | `enemyPattern` | Gegnermix je Stufe (Abstaende in der Spawn-Reihenfolge). |
 | `tuningCost` | XP-Kurve der Dauer-Upgrades. |
 | `waveReward`, `enemies[*].bounty` | Energie-Zufluss. |
@@ -44,16 +47,18 @@ Alles in `game.js` im Block `GAME_BALANCE`:
 | `baseRepair`, `bomb` | Preis und Wirkung von Basis-Reparatur und Orbitalschlag. Der Bot nutzt beides nicht. |
 | `TOWER_UNLOCKS` | Starter, ab welchem Level ein Turm freischaltbar ist, Auto-Freischaltung. |
 
-Pro Mission in `PLANETS`: `credits` (Startenergie), `hp`, `bounty`, `count`,
-`speed`, `spawn`, `waves` und optional `pattern`, das einzelne Werte aus
-`enemyPattern` ueberschreibt (`eliteLate`, `eliteFinal`, `eliteMid` = die zwei
-Kommandopanzer mitten in der letzten Welle).
+Pro Mission in `PLANETS`: `credits` (Startenergie), `waves`, optional `pattern`
+(ueberschreibt einzelne Werte aus `enemyPattern`: `eliteLate`, `eliteFinal`,
+`eliteMid` = die zwei Kommandopanzer mitten in der letzten Welle) und optional
+`earlyLight` (zusaetzliche Sondendrohnen in den ersten Wellen). `level` dient
+nur noch intern fuer Gegnermix, Eingaenge und Hindernisdichte; angezeigt werden
+Levelnummer und Sterne.
 
 ### Reihenfolge beim Nachjustieren
 
-1. Mission zu hart → `worldHpRamp` des Planeten senken.
-2. Mission zu leicht → `enemyHpLateStep` erhoehen (trifft nur die Schlusswellen)
-   oder `mission.bounty` senken (weniger Energie).
+1. Gesamtverlauf zu steil oder zu flach → `levelCurve` (Anfangs- und
+   Endwert einer Spalte, dazwischen gleichmaessige Schritte).
+2. Einzelnes Level → Wellenzahl, Gegnermix, `earlyLight`.
 3. **Vorsicht bei `mission.credits`.** Das Startkapital entscheidet, ob das
    Labyrinth vor dem Mittelspiel steht. Zu wenig kippt eine Mission schlagartig
    von "knapper Sieg" auf "Niederlage in Welle 10", ohne dass ein Gegner
@@ -164,6 +169,29 @@ Fuer Vorher-nachher-Vergleiche kann die Testschnittstelle Werte zur Laufzeit
 ueberschreiben: `ICEBOUND_PROBE.override('rail', {cost:145})`,
 `ICEBOUND_PROBE.mission(1, {waves:12})`, `ICEBOUND_PROBE.unlocks()`.
 
+## Feste Labyrinth-Plaene
+
+Der frei bauende Bot baut schwache Labyrinthe (Routen hoechstens ×1,6). Fuer
+Kampagnen-Pruefungen baut er deshalb je Level einen festen Maeander aus
+`tools/maze_plans.json` nach:
+
+```js
+const plans = await (await fetch('tools/maze_plans.json')).json()
+// Mission starten, dann:
+__followPlan(plans[level - 1])
+```
+
+Jeder Plan ist eine Liste von Bauschritten (Typ, Feld, Kosten). Der Bot baut
+sie stur in dieser Reihenfolge und wartet, wenn die Energie fuer den naechsten
+Schritt fehlt. Die Regeln hinter den Plaenen: Riegel auf Spalten mit vielen
+vorhandenen Hindernissen, Luecke abwechselnd oben und unten, mindestens drei
+Spalten Abstand, jede dritte Zelle eine Mauer, jeder Riegel vom Ende
+gegenueber der Luecke aus gebaut, damit jeder Stein den Weg sofort verlaengert.
+
+Das Spiel zaehlt dabei je Gegnertyp mit, wie viele erscheinen, mit wie viel
+Leben und wer durchbricht (`ICEBOUND_PROBE.stats()`); `setTuning(typ, stufe)`
+tunt einzelne Tuerme.
+
 ## Turmstaerke im Arsenal-Test
 
 ```js
@@ -191,37 +219,42 @@ Ungetunt dominierte die Railgun, voll getunt liegen alle nah beieinander.
 Deshalb wurden Preise und Freischaltzeitpunkte geaendert, nicht Schaden oder
 Takt (einzige Ausnahme: Gatling 7 → 9, siehe unten).
 
-## Ergebnis Turm- und Level-Balancing (2026-09-25)
+## Ergebnis Turm- und Level-Balancing (Stand 2026-09-26)
 
-Aenderungen: Start nur Gatling (jetzt nur Boden) und Mauer, Railgun 145 → 175
-ab Level 6, Drohnennest 175 → 200 ab Level 5, Gatling-Schaden 7 → 9, erste
-sechs Level kuerzer (8/12/16/10/14/18 statt 12/16/20/12/16/20 Wellen), in der
-Aurora-Senke nur ein Kommandopanzer in der letzten Welle.
-
-| Level | vorher | nachher |
+| Bereich | Vorher | Jetzt |
 |---|---|---|
-| 1 Aurora-Senke | Sieg 12/12, 100 % Integritaet, 0 Durchbrueche | Sieg 8/8, 60 %, 1 Durchbruch |
-| 2 Scherbenpass | Niederlage 16/16 | Niederlage 11/12 |
-| 3 Nulllicht-Riss | Niederlage 16/20 | Niederlage 11/16 |
-| 4 Aschehafen | Sieg 12/12, 100 % | Sieg 10/10, 80 % |
-| 12 Event-Horizont, voll getunt | Niederlage 19/25 | Niederlage 17/25 |
+| Start-Arsenal | Railgun, Gatling, Mauer | Gatling, Mauer |
+| Gatling | Luft + Boden, 130 E, Schaden 7 | nur Boden, 120 E, Schaden 9,45 |
+| Freischaltung | alles ab Start per XP | Moerser, Kryo ab Level 2 (je 130 XP); Brecher, Laser, Rakete ab 3; Drohne ab 5; Railgun ab 6; Laser automatisch in Level 3 |
+| Turmkosten | Railgun 145, Drohne 175, Moerser 185, Laser 135, Kryo 155, Brecher 205 | Railgun 175, Drohne 200, Moerser 175, Laser 145, Kryo 150, Brecher 190 |
+| Railgun-Schaden | 108 | 91,8 (−15 %) |
+| Uebrige Bodenwaffen | – | +5 % Schaden |
+| Laser / Rakete | Schaden 10 / 105 | 19,25 / 201,7 (+92 %) |
+| Level-Verlauf | Saegezahn je Planet (Leicht/Mittel/Schwer), Faktoren je Planet und Mission | eine Level-Tabelle `levelCurve`: Leben, Tempo, Anzahl, Abstand, Startenergie (520–780), Wellen (8–25), Luftgegner ab Level 3, Kommandopanzer – alles gleichmaessig steigend |
+| Praemie | je Mission und Planet unterschiedlich, Finale −40 % | ueberall gleich, keine Kuerzung |
+| Anzeige | Leicht/Mittel/Schwer | Levelnummer und Sterne (1–5) |
 
-Level 1-3 mit Labyrinth-Taktik (`openingTowers:2, saveAfter:2, maxBarriers:6`).
-Dass der Bot Level 2, 3 und das Finale verliert, war schon vorher so; er spielt
-ordentlich, aber nicht wie ein Mensch.
+
+Bot-Pruefung mit festen Labyrinth-Plaenen (`tools/maze_plans.json`, inklusive
+Ausbau-Phase bis die Energie verbraucht ist), Ausstattung eines ersten
+Durchlaufs, vier Tuning-Strategien je Level. Mit Level-Tabelle und
+Planeten-Eigenschaften: **12 von 12 Leveln schaffbar** (Stand 2026-09-26),
+nachdem nur der Bot angepasst wurde: Level 5 baut vier Grundtuerme und drei
+Laser vor dem ersten Riegel, Level 10–12 bauen im Ausbau zusaetzlich
+Luftabwehr (5/5/6 Tuerme). Knapp: Level 5 (20 % Integritaet, nur eine
+Strategie) und Level 6 (9 %).
 
 Erkenntnisse, die man beim naechsten Mal nicht neu herausfinden muss:
 
-- Die Railgun hat den Einstieg allein getragen. Ohne sie war Level 1 im Bot-Test
-  rund dreimal so schwer; der Engpass sind die **Kommandopanzer** (Schild plus
-  Panzerung), gegen die kleine Gatling-Treffer kaum ankommen.
-- Hohe Aufschlaege auf Railgun und Drohnennest (260 / 230) machten das Finale
-  deutlich schwerer (19 → 12 Wellen). Das Finale haengt stark an diesen Preisen.
-- Weil Gatling und Railgun frueher nebenbei Luft abwehrten, braucht es jetzt
-  eigene Luftabwehr. Der Bot baute vorher gar keine (er sparte nie fuer die
-  Rakete); er beginnt jetzt mit dem Laser und spart dafuer.
-- Kuerzere Level bedeuten weniger XP: ein erster Durchlauf erreicht das Finale
-  mit Tuning 3/3/3 statt 4/4/4. Offen, ob das ausgeglichen werden soll.
+- Die Railgun trug den Einstieg allein; ohne sie entscheiden die
+  Kommandopanzer (Schild plus Panzerung) die ersten Level.
+- Die Eingaenge schicken der Reihe nach (`activeSpawnLane`): erst die ersten
+  1/n der Wellen aus Eingang 1, dann Eingang 2 usw.
+- Mehr Startenergie ist ein grober Hebel (+69 % bis +181 % fuer einen Sieg,
+  das Finale gar nicht).
+- Gegnerzahl als Hebel ist schwach, weil mehr Gegner auch mehr Energie bringen.
+- Das Tuning entscheidet mit: kleine Verschiebungen (z. B. Kryo und Brecher auf
+  Stufe 1 statt einer zweiten Moerser-Stufe) kippen einzelne Level.
 
 ## Letztes Ergebnis (2026-07-30)
 

@@ -24,33 +24,33 @@
       mods:{wallSlow:.70,splash:1,railPierce:0,droneBonus:0,regen:1,enemySpeed:1,bounty:1},obstacleTypes:['crystal','ridge','rock','wreck'],
       theme:{accent:'#8defff',glow:'#4cf1cf',sky:['#01040f','#07172d','#28485a'],ridge:['#172839','#243b49','#718b91'],ground:['#71878a','#4c6868','#263f42'],surface:'#607779',patches:['rgba(188,229,225,.12)','rgba(35,77,71,.18)','rgba(92,113,101,.17)','rgba(116,151,144,.14)','rgba(229,239,220,.13)','rgba(40,92,83,.13)','rgba(123,139,113,.12)','rgba(55,107,96,.15)'],dark:'#263e39',light:'#d6ece4',plant:'#4c685b',crystal:'#76cddd',weather:'#dffcff',warm:'rgba(91,255,216,.11)'},
       missions:[
-        {name:'AURORA-SENKE',level:'LEICHT',stars:'★☆☆',brief:'Weite Bauflächen unter ruhigem Sonnenwind.',credits:520,hp:1.10,speed:.96,spawn:1.05,count:1,waves:8,pattern:{eliteLate:0,eliteFinal:1,eliteMid:0},bounty:1.08,spawnY:6,baseY:6,layout:0,seed:11},
-        {name:'SCHERBENPASS',level:'MITTEL',stars:'★★☆',brief:'Kristallzüge formen zwei enge Umgehungen.',credits:500,hp:.95,speed:1.03,spawn:.94,count:1.12,waves:12,bounty:1.02,spawnY:3,baseY:9,layout:1,seed:23},
-        {name:'NULLLICHT-RISS',level:'SCHWER',stars:'★★★',brief:'Dichte Eisrücken, wenig Energie, lange Nacht.',credits:700,hp:.85,speed:1.1,spawn:.78,count:1.3,waves:16,bounty:.78,spawnY:10,baseY:2,layout:2,seed:37}
+        {name:'AURORA-SENKE',level:'LEICHT',brief:'Weite Bauflächen unter ruhigem Sonnenwind.',spawnY:6,baseY:6,layout:0,seed:11},
+        {name:'SCHERBENPASS',level:'LEICHT',brief:'Kristallzüge formen zwei enge Umgehungen.',spawnY:3,baseY:9,layout:1,seed:23},
+        {name:'NULLLICHT-RISS',level:'SCHWER',brief:'Dichte Eisrücken, wenig Energie, lange Nacht.',spawnY:10,baseY:2,layout:2,seed:37}
       ]},
     {id:'pyra',code:'P-22',name:'PYRA',title:'CALDERA-MOND',celestial:'twins',flora:'spire',trait:'THERMISCHE AUFWINDE · Raketen und Mörser erhalten 18 % mehr Wirkungsradius.',seed:300,
       mods:{wallSlow:.78,splash:1.18,railPierce:0,droneBonus:0,regen:1,enemySpeed:1.04,bounty:1},obstacleTypes:['rock','ridge','wreck','crystal'],
       theme:{accent:'#ffb05f',glow:'#ff5d37',sky:['#10050a','#351018','#8a3a26'],ridge:['#29141a','#4a2521','#9a5940'],ground:['#8c5d43','#654233','#33282a'],surface:'#6b493b',patches:['rgba(246,155,82,.13)','rgba(77,31,25,.22)','rgba(150,70,39,.17)','rgba(99,54,42,.2)','rgba(255,202,126,.09)','rgba(62,29,29,.18)','rgba(181,100,52,.13)','rgba(111,48,32,.19)'],dark:'#3b2523',light:'#e8b183',plant:'#4d2823',crystal:'#ff754d',weather:'#ffb469',warm:'rgba(255,87,43,.15)'},
       missions:[
-        {name:'ASCHEHAFEN',level:'LEICHT',stars:'★☆☆',brief:'Offene Basaltterrassen zwischen warmen Fumarolen.',credits:520,hp:1.20,speed:.97,spawn:1.04,count:1,waves:10,bounty:1.08,spawnY:5,baseY:7,layout:3,seed:13},
-        {name:'CALDERA-KREUZ',level:'MITTEL',stars:'★★☆',brief:'Kreuzende Lavagrate erzwingen schnelle Umbauten.',credits:500,hp:1.01,speed:1.04,spawn:.92,count:1.14,waves:14,bounty:.99,spawnY:1,baseY:10,layout:4,seed:29},
-        {name:'HÖLLENSCHLUND',level:'SCHWER',stars:'★★★',brief:'Aggressive Brut unter dichtem Ascheregen.',credits:700,hp:1.06,speed:1.11,spawn:.76,count:1.33,waves:18,bounty:.78,spawnY:11,baseY:3,layout:5,seed:43}
+        {name:'ASCHEHAFEN',level:'LEICHT',brief:'Offene Basaltterrassen zwischen warmen Fumarolen.',spawnY:5,baseY:7,layout:3,seed:13},
+        {name:'CALDERA-KREUZ',level:'MITTEL',brief:'Kreuzende Lavagrate erzwingen schnelle Umbauten.',spawnY:1,baseY:10,layout:4,seed:29},
+        {name:'HÖLLENSCHLUND',level:'SCHWER',brief:'Aggressive Brut unter dichtem Ascheregen.',spawnY:11,baseY:3,layout:5,seed:43}
       ]},
     {id:'verdant',code:'V-81',name:'VERDANT',title:'BIO-MOND',celestial:'rings',flora:'fan',trait:'DICHTE ATMOSPHÄRE · Gegner bewegen sich etwas langsamer, Regeneratoren reparieren sich dafür stärker.',seed:500,
       mods:{wallSlow:.74,splash:1,railPierce:0,droneBonus:0,regen:1.35,enemySpeed:.98,bounty:1},obstacleTypes:['crystal','rock','wreck','ridge'],
       theme:{accent:'#8dffb0',glow:'#35e6d0',sky:['#020d12','#092f37','#24675d'],ridge:['#153c3c','#285a4d','#6a9575'],ground:['#6e8f68','#446d55','#203e39'],surface:'#55765d',patches:['rgba(154,232,143,.14)','rgba(24,87,65,.2)','rgba(82,128,65,.18)','rgba(60,121,88,.2)','rgba(203,244,167,.1)','rgba(25,103,86,.16)','rgba(113,151,78,.15)','rgba(48,139,105,.18)'],dark:'#1e4d3c',light:'#c7f4bd',plant:'#58a66f',crystal:'#72f5bf',weather:'#a5ffd1',warm:'rgba(81,255,184,.12)'},
       missions:[
-        {name:'SPORENHAIN',level:'LEICHT',stars:'★☆☆',brief:'Breite Lichtungen im biolumineszenten Pilzwald.',credits:520,hp:1.21,speed:.96,spawn:1.03,count:1.02,waves:12,bounty:1.08,spawnY:7,baseY:5,layout:6,seed:17},
-        {name:'TITANWURZEL',level:'MITTEL',stars:'★★☆',brief:'Alte Wurzelrücken teilen das Einsatzgebiet.',credits:500,hp:.94,speed:1.04,spawn:.9,count:1.16,waves:16,bounty:.98,spawnY:2,baseY:8,layout:7,seed:31},
-        {name:'SMARAGD-ABGRUND',level:'SCHWER',stars:'★★★',brief:'Regenerative Brut und kaum freie Feuerkorridore.',credits:700,hp:.89,speed:1.11,spawn:.74,count:1.35,waves:20,bounty:.78,spawnY:10,baseY:1,layout:8,seed:47}
+        {name:'SPORENHAIN',level:'LEICHT',brief:'Breite Lichtungen im biolumineszenten Pilzwald.',spawnY:7,baseY:5,layout:6,seed:17},
+        {name:'TITANWURZEL',level:'MITTEL',brief:'Alte Wurzelrücken teilen das Einsatzgebiet.',spawnY:2,baseY:8,layout:7,seed:31},
+        {name:'SMARAGD-ABGRUND',level:'SCHWER',brief:'Regenerative Brut und kaum freie Feuerkorridore.',spawnY:10,baseY:1,layout:8,seed:47}
       ]},
     {id:'umbra',code:'U-00',name:'UMBRA',title:'EKLIPSEN-MOND',celestial:'eclipse',flora:'shard',trait:'GRAVITISCHE LINSEN · Railguns durchschlagen zwei zusätzliche Ziele; Energieprämien sind geringer.',seed:700,
       mods:{wallSlow:.74,splash:1,railPierce:2,droneBonus:0,regen:1,enemySpeed:1.02,bounty:.88},obstacleTypes:['ridge','crystal','wreck','rock'],
       theme:{accent:'#cf8dff',glow:'#6f7cff',sky:['#010106','#100925','#35204e'],ridge:['#120f20','#29203d','#6b5681'],ground:['#565069','#383448','#171a29'],surface:'#414052',patches:['rgba(151,132,210,.14)','rgba(24,21,47,.24)','rgba(95,83,133,.18)','rgba(62,62,102,.2)','rgba(213,196,255,.08)','rgba(39,31,75,.19)','rgba(118,91,153,.13)','rgba(52,47,91,.2)'],dark:'#202039',light:'#d8c9ef',plant:'#5d4f7e',crystal:'#b77cff',weather:'#d1c4ff',warm:'rgba(132,83,255,.13)'},
       missions:[
-        {name:'DÄMMERFELD',level:'LEICHT',stars:'★☆☆',brief:'Lange Sichtlinien im Schatten der totalen Eklipse.',credits:520,hp:1.29,speed:.98,spawn:1.02,count:1.04,waves:12,bounty:1.16,spawnY:6,baseY:6,layout:9,seed:19},
-        {name:'EKLIPSENBRUCH',level:'MITTEL',stars:'★★☆',brief:'Schwarze Kristallbänder brechen jede Gerade.',credits:500,hp:.97,speed:1.06,spawn:.86,count:1.2,waves:16,bounty:1.10,spawnY:3,baseY:10,layout:10,seed:41},
-        {name:'EVENT-HORIZONT',level:'FINAL',stars:'★★★★',brief:'Die ultimative 25-Wellen-Prüfung für ein ausgebautes Arsenal.',credits:780,hp:.98,speed:1.15,spawn:.66,count:1.48,waves:25,bounty:.80,spawnY:11,baseY:2,layout:11,seed:59}
+        {name:'DÄMMERFELD',level:'LEICHT',brief:'Lange Sichtlinien im Schatten der totalen Eklipse.',spawnY:6,baseY:6,layout:9,seed:19},
+        {name:'EKLIPSENBRUCH',level:'MITTEL',brief:'Schwarze Kristallbänder brechen jede Gerade.',spawnY:3,baseY:10,layout:10,seed:41},
+        {name:'EVENT-HORIZONT',level:'FINAL',brief:'Die ultimative 25-Wellen-Prüfung für ein ausgebautes Arsenal.',spawnY:11,baseY:2,layout:11,seed:59}
       ]}
   ];
   const types={
@@ -91,11 +91,15 @@
                      Der Pulslaser ist die Pflicht-Luftabwehr: ab Level 3 kommen
                      Luftgegner, und niemand soll sich vorher so arm tunen, dass
                      er keine Luftabwehr mehr freischalten kann.
-     Freischalten kostet Baukosten × UNLOCK_XP_FACTOR XP. */
+     Freischalten kostet Baukosten × UNLOCK_XP_FACTOR XP, ausser xpCost nennt
+     einen festen Preis: Moerser und Kryo muessen nach einem einzigen Durchlauf
+     von Level 1 (rund 280 XP) zusammen bezahlbar sein. Im Bot-Test ist Level 2
+     nur mit beiden zu halten, mit Gatling plus einem davon nicht. */
   const TOWER_UNLOCKS={
     starter:['gatling','wall'],
     availableFrom:{gatling:1,wall:1,mortar:2,cryo:2,disruptor:3,laser:3,rocket:3,drone:5,rail:6},
-    autoUnlock:['laser']
+    autoUnlock:['laser'],
+    xpCost:{mortar:130,cryo:130}
   };
   const STARTER_TYPES=TOWER_UNLOCKS.starter,UNLOCK_XP_FACTOR=2.4;
   /* Version 2 (2026-09): die Railgun ist kein Starter mehr. Alte Spielstaende
@@ -135,16 +139,37 @@
     enemyHpLateStart: 6,
     enemyHpLateStep: 0.105,
 
-    /* WELT-STEIGERUNG — der Kern des Schwierigkeitsverlaufs.
-       Ein Arsenal wird im Lauf der Kampagne durch Tuning und neue Waffen rund
-       fuenfmal so stark. Ohne diese Rampe waere Welt 4 leichter als Welt 1.
-       Wirkt nur auf Lebenspunkte, nicht auf Gegnerzahl oder Kopfgeld, damit
-       hoehere Welten nicht automatisch mehr XP und Energie ausschuetten. */
-    worldHpRamp: {
-      nivalis: 1.00,
-      pyra:    1.22,
-      verdant: 1.72,
-      umbra:   1.62
+    /* KAMPAGNEN-KURVE — der ganze Schwierigkeitsverlauf ueber die 12 Level in
+       einer Tabelle (Stand 2026-09-26). Jede Spalte steigt von Level zu Level
+       um denselben Faktor (geometrisch), ohne Saegezahn je Planet:
+         hp     Lebenspunkte aller Gegner         +8,4 % je Level
+         speed  Tempo                             +3,9 % je Level
+         count  Gegner je Welle                   +8,9 % je Level
+         spawn  Abstand zwischen zwei Gegnern     −4,1 % je Level
+       Level 1 und Level 12 behalten die Werte, die sie vorher effektiv hatten.
+       Dazu je Level, ebenfalls gleichmaessig steigend:
+         credits     Startenergie
+         waves       Wellenzahl
+         phaser      jeder n-te Gegner ist ein Phasengleiter (Luft), 0 = keine
+         eliteLate   Kommandopanzer je spaeter Welle (ab 72 % der Wellen)
+         eliteFinal  Kommandopanzer in der Schlusswelle
+         stars       Sterne in der Levelauswahl
+       Ein Gegnertyp bringt ueberall dieselbe Energie und dieselben XP, keine
+       Praemienkuerzung je Level. Die Planeten-Eigenschaften (PLANETS.mods:
+       Gegnertempo, Reparatur, Energie auf Umbra) gehoeren zum Planeten-Charakter
+       und bleiben. Eingaenge und Hindernisse gehoeren
+       zur Karte und stehen nicht hier. Im Arsenal-Test gilt ueberall 1. */
+    levelCurve: {
+      credits:    [520, 540, 560, 580, 600, 625, 650, 670, 700, 725, 750, 780],
+      waves:      [  8,  10,  11,  13,  14,  16,  17,  19,  20,  22,  23,  25],
+      phaser:     [  0,   0,   9,   9,   8,   8,   7,   7,   6,   6,   5,   5],
+      eliteLate:  [  0,   0,   0,   1,   1,   1,   1,   2,   2,   2,   3,   3],
+      eliteFinal: [  0,   1,   1,   2,   2,   3,   4,   4,   5,   6,   7,   8],
+      stars:      [  1,   1,   2,   2,   2,   3,   3,   3,   4,   4,   4,   5],
+      hp:    [1.10, 1.19, 1.29, 1.40, 1.52, 1.64, 1.78, 1.93, 2.09, 2.27, 2.45, 2.66],
+      speed: [0.96, 1.00, 1.04, 1.08, 1.12, 1.16, 1.21, 1.25, 1.30, 1.35, 1.41, 1.46],
+      count: [1.00, 1.09, 1.19, 1.29, 1.41, 1.53, 1.67, 1.82, 1.98, 2.16, 2.35, 2.56],
+      spawn: [1.05, 1.01, 0.96, 0.93, 0.89, 0.85, 0.82, 0.78, 0.75, 0.72, 0.69, 0.66]
     },
 
     /* BASIS-REPARATUR: stellt 'amount' Integritaet wieder her. Preis in
@@ -268,28 +293,11 @@
       speed: 0.018
     },
 
-    /* Wirkt auf Lebenspunkte, Gegnerzahl und Tempo (Tempo mit Wurzel). */
-    levelDifficulty: {
-      LEICHT:  1.00,
-      MITTEL:  1.30,
-      SCHWER:  1.36,
-      FINAL:   1.55
-    },
-
-    /* GEGNERMIX je Stufe. Die Zahlen sind Abstaende in der Spawn-Reihenfolge:
-       armored 5 heisst jeder fuenfte Spawn ist ein Belagerungspanzer. 0 schaltet
-       den Typ ab. Die Reihenfolge der Pruefung ist fest, der erste Treffer
-       gewinnt. eliteLate sind Kommandopanzer in den Schlusswellen, eliteFinal
-       die der letzten Welle.
-       Das Finale verlangt bewusst das komplette Arsenal: viele Phasengleiter
-       (nur Luftwaffen treffen sie), viele Panzer (Railgun ignoriert Panzerung)
-       und acht Kommandopanzer mit starkem Schild (Schild-Brecher). */
-    enemyPattern: {
-      LEICHT: { phaser: 0, splitter: 5, armored: 5, regenerator: 4, runner: 3, eliteLate: 1, eliteFinal: 3 },
-      MITTEL: { phaser: 0, splitter: 5, armored: 5, regenerator: 4, runner: 3, eliteLate: 1, eliteFinal: 3 },
-      SCHWER: { phaser: 7, splitter: 5, armored: 5, regenerator: 4, runner: 3, eliteLate: 2, eliteFinal: 4 },
-      FINAL:  { phaser: 5, splitter: 6, armored: 4, regenerator: 4, runner: 3, eliteLate: 3, eliteFinal: 6 }
-    },
+    /* GEGNERMIX, fuer alle Level gleich. Die Zahlen sind Abstaende in der
+       Spawn-Reihenfolge: armored 5 heisst jeder fuenfte Spawn ist ein
+       Belagerungspanzer. Phasengleiter und Kommandopanzer steigen je Level und
+       stehen in levelCurve. */
+    enemyMix: { splitter: 5, armored: 5, regenerator: 4, runner: 3 },
 
     /* Preise nach Staerke gestaffelt (Stand 2026-09, gemessen mit dem
        Arsenal-Test bei steigender Gegnerzahl): die Railgun hielt ungetunt
@@ -298,17 +306,23 @@
        im Bot-Test das Finale deutlich schwerer, deshalb nur maessig.
        Die Gatling trifft nur noch Boden und ist der einzige Starterturm; ihr
        Schaden steigt dafuer von 7 auf 9, sonst ist Level 1 nicht zu halten.
+       Laser und Rakete machen seit 2026-09-26 25 % mehr Schaden: im Bot-Test
+       brachen in Level 3 und 9 nur noch Luftgegner durch. Danach (ebenfalls
+       2026-09-26): Railgun −15 %, weil sie in fast jedem Level den groessten
+       Schadensanteil hatte; alle anderen Bodenwaffen +5 %, Laser und Rakete
+       +10 %. Danach Laser und Rakete nochmals +40 %: Level 3 war sonst nur
+       mit ungetunten Lasern zu halten, dort gehen alle XP in Freischaltungen.
        Alle anderen Schadens- und Taktwerte bleiben, weil voll getunt alle
        Waffen nah beieinander liegen. */
     weapons:{
-      rail:      { cost: 175, damage: 108, rate: 2.15, range: 275 },
-      drone:     { cost: 200, damage:  12, rate: 0.42, range: 225 },
-      rocket:    { cost: 215, damage: 105, rate: 3.25, range: 290, missiles: 3 },
-      mortar:    { cost: 175, damage:  70, rate: 2.40, range: 310, minRange: 156 },
-      laser:     { cost: 145, damage:  10, rate: 0.20, range: 190 },
-      cryo:      { cost: 150, damage:   7, rate: 0.80, range: 205 },
-      gatling:   { cost: 120, damage:   9, rate: 0.11, range: 165 },
-      disruptor: { cost: 190, damage:  96, rate: 2.75, range: 260 },
+      rail:      { cost: 175, damage: 91.8, rate: 2.15, range: 275 },
+      drone:     { cost: 200, damage:  12.6, rate: 0.42, range: 225 },
+      rocket:    { cost: 215, damage: 201.7, rate: 3.25, range: 290, missiles: 3 },
+      mortar:    { cost: 175, damage:  73.5, rate: 2.40, range: 310, minRange: 156 },
+      laser:     { cost: 145, damage:  19.25, rate: 0.20, range: 190 },
+      cryo:      { cost: 150, damage:   7.35, rate: 0.80, range: 205 },
+      gatling:   { cost: 120, damage:   9.45, rate: 0.11, range: 165 },
+      disruptor: { cost: 190, damage:  100.8, rate: 2.75, range: 260 },
       /* Bewusst der billigste Bauteil im Spiel: das Labyrinth ist die
          Hauptwaffe, nicht ein Nebenprodukt. */
       wall:      { cost:  30 }
@@ -431,10 +445,10 @@
   function planetUnlocked(planetId){const at=PLANETS.findIndex(p=>p.id===planetId);if(at<=0)return true;return PLANETS.slice(0,at).every(planetCleared)}
   function missionUnlocked(planetId,index){if(!planetUnlocked(planetId))return false;return index===0||missionCleared(planetId,index-1)}
   function markMissionCleared(planetId,index){const key=missionKey(planetId,index);if(progress.cleared.includes(key))return;progress.cleared.push(key);saveProgress()}
-  /* Luftwaffen tauchen erst auf, wenn es ueberhaupt Luftziele gibt: ab der
-     ersten erreichbaren Schwer- oder Final-Mission. */
-  function airTierReached(){return PLANETS.some(planet=>planet.missions.some((mission,index)=>(mission.level==='SCHWER'||mission.level==='FINAL')&&missionUnlocked(planet.id,index)))}
   const CAMPAIGN=PLANETS.flatMap(planet=>planet.missions.map((_,index)=>({planetId:planet.id,index})));
+  /* Startenergie, Wellen und Sterne kommen aus der Level-Tabelle
+     (GAME_BALANCE.levelCurve) und werden hier in die Missionen geschrieben. */
+  function applyLevelCurve(){const c=GAME_BALANCE.levelCurve;CAMPAIGN.forEach((entry,i)=>{const m=PLANETS.find(p=>p.id===entry.planetId).missions[entry.index];m.credits=c.credits[i];m.waves=c.waves[i];m.stars='★'.repeat(c.stars[i])})}
   function campaignIndex(planetId,index){return CAMPAIGN.findIndex(level=>level.planetId===planetId&&level.index===index)}
   function levelReached(level){const entry=CAMPAIGN[level-1];return level<=1||!entry||missionUnlocked(entry.planetId,entry.index)}
   function availableFromLevel(type){return TOWER_UNLOCKS.availableFrom[type]||1}
@@ -444,7 +458,7 @@
   function towerUnlocked(type){return progress.unlocked.includes(type)}
   function towerAvailable(type){return levelReached(availableFromLevel(type))}
   function availabilityText(type){return `AB LEVEL ${availableFromLevel(type)}`}
-  function unlockXpCost(type){return Math.round(types[type].cost*UNLOCK_XP_FACTOR)}
+  function unlockXpCost(type){return TOWER_UNLOCKS.xpCost[type]??Math.round(types[type].cost*UNLOCK_XP_FACTOR)}
   function unlockTower(type){if(towerUnlocked(type))return;progress.unlocked.push(type);saveProgress()}
   function arsenalTuningLabel(mode=state?.testTuningMode){return TEST_TUNING_MODES[mode]||TEST_TUNING_MODES.zero}
   function arsenalEnemyLabel(kind=state?.testEnemyType){return kind==='mixed'?'GEMISCHT':(enemyTypes[kind]||enemyTypes[GAME_BALANCE.arsenalTest.enemyType]).name}
@@ -475,11 +489,11 @@
     materialAssetsReady=false;surfacePattern=null;terrainReady=false;gridReady=false;skyCtx.clearRect(0,0,W,H);terrainCtx.clearRect(0,0,W,H);pathCtx.clearRect(0,0,W,H);wallCtx.clearRect(0,0,W,H);gridCtx.clearRect(0,0,W,H);const wrap=document.querySelector('.canvas-wrap');if(wrap)wrap.dataset.planet=planet.id;document.documentElement.style.setProperty('--world-accent',planet.theme.accent);document.documentElement.style.setProperty('--world-glow',planet.theme.glow)
   }
   function renderWorldPicker(){
-    const planet=activePlanet(),mission=activeMission();document.querySelectorAll('[data-planet]').forEach(button=>{const open=planetUnlocked(button.dataset.planet);button.classList.toggle('active',button.dataset.planet===planet.id);button.classList.toggle('locked',!open);button.disabled=!open;button.title=open?'':'Erst alle Missionen des vorherigen Planeten abschliessen'});$('#missionPicker').innerHTML=planet.missions.map((item,index)=>{const open=missionUnlocked(planet.id,index),done=missionCleared(planet.id,index);return`<button class="mission-card ${index===activeMissionIndex?'active':''} ${open?'':'locked'} ${done?'cleared':''}" data-mission="${index}" ${open?'':'disabled'}><b>${item.name}</b><em>${done?'✔':open?item.stars:'🔒'}</em><span>${item.level} · ${item.waves} WELLEN</span></button>`}).join('');$('#worldBrief').innerHTML=`${mission.brief}<span>${planet.trait}</span>`;$('#sectorName').textContent=`${planet.code} · ${mission.level}`;$('#messageEyebrow').textContent=`${planet.code} // ${planet.title}`;$('#messageTitle').textContent=mission.name;$('#messageCopy').textContent=`${planet.name}: ${mission.level.toLowerCase()}er Einsatz mit ${mission.waves} automatischen Wellen und ${mission.credits} Startenergie.`
+    const planet=activePlanet(),mission=activeMission();document.querySelectorAll('[data-planet]').forEach(button=>{const open=planetUnlocked(button.dataset.planet);button.classList.toggle('active',button.dataset.planet===planet.id);button.classList.toggle('locked',!open);button.disabled=!open;button.title=open?'':'Erst alle Missionen des vorherigen Planeten abschliessen'});$('#missionPicker').innerHTML=planet.missions.map((item,index)=>{const open=missionUnlocked(planet.id,index),done=missionCleared(planet.id,index);return`<button class="mission-card ${index===activeMissionIndex?'active':''} ${open?'':'locked'} ${done?'cleared':''}" data-mission="${index}" ${open?'':'disabled'}><b>${item.name}</b><em>${done?'✔':open?item.stars:'🔒'}</em><span>LEVEL ${campaignIndex(activePlanetId,index)+1} · ${item.waves} WELLEN</span></button>`}).join('');$('#worldBrief').innerHTML=`${mission.brief}<span>${planet.trait}</span>`;$('#sectorName').textContent=`${planet.code} · LEVEL ${campaignIndex(activePlanetId,activeMissionIndex)+1}`;$('#messageEyebrow').textContent=`${planet.code} // ${planet.title}`;$('#messageTitle').textContent=mission.name;$('#messageCopy').textContent=`${planet.name}: Level ${campaignIndex(activePlanetId,activeMissionIndex)+1} mit ${mission.waves} automatischen Wellen und ${mission.credits} Startenergie.`
   }
   function setMissionScreen(visible){$('#message').classList.toggle('hidden',!visible);$('#missionBackdrop').hidden=!visible;document.body.classList.toggle('mission-screen',visible);syncRotateHint()}
   function selectWorld(planetId,missionIndex=0){if(!missionUnlocked(planetId,missionIndex)){pulse('EINSATZ NOCH GESPERRT');return}activePlanetId=planetId;activeMissionIndex=missionIndex;configureWorld();reset();renderWorldPicker();setMissionScreen(true);$('#startBtn').textContent='MISSION STARTEN'}
-  function reset(){const mission=activeMission(),integrity=Math.max(1,GAME_BALANCE.baseIntegrity);selected=null;selectedTowerId=null;selectedEnemyId=null;renderDetail=2;framePressure=0;state={credits:mission.credits,integrity,maxIntegrity:integrity,wave:0,maxWaves:mission.waves,nextTowerId:1,nextEnemyId:1,towers:[],drones:[],enemies:[],shots:[],particles:[],floaters:[],cracks:[],shocks:[],shake:0,baseFlash:0,impactFlash:0,impactColor:'#ffffff',path:null,paths:[],spawnLaneCursor:0,testStations:[],testTowerIds:new Set(),testTuningMode:'zero',testEnemyType:GAME_BALANCE.arsenalTest.enemyType,testElapsed:0,wallSlowCells:new Set(),buildPhase:false,pending:[],repairs:0,bombCooldown:0,bombArmed:false,waveActive:false,intermission:0,spawnLeft:0,spawnTimer:0,waveSpawned:0,waveSpawnTotal:0,waveKills:0,waveBreaches:0,kills:0,breaches:0,testMode:false,endless:false,started:false,over:false,result:null};state.paths=spawnPoints.map(point=>pathfind(null,point));state.path=state.paths[0];uiSnapshot='';intelSnapshot='';uiNext=0;placementCache.key='';document.querySelectorAll('.tower-card').forEach(b=>b.classList.remove('active'));const selectionSection=$('#selectionSection'),buildSection=$('#buildSection');if(selectionSection)selectionSection.open=false;if(buildSection)buildSection.open=true;rebuildPathCache();rebuildWallSystems();updateUI()}
+  function reset(){const mission=activeMission(),integrity=Math.max(1,GAME_BALANCE.baseIntegrity);selected=null;selectedTowerId=null;selectedEnemyId=null;renderDetail=2;framePressure=0;state={credits:mission.credits,integrity,maxIntegrity:integrity,wave:0,maxWaves:mission.waves,nextTowerId:1,nextEnemyId:1,towers:[],drones:[],enemies:[],shots:[],particles:[],floaters:[],cracks:[],shocks:[],shake:0,baseFlash:0,impactFlash:0,impactColor:'#ffffff',path:null,paths:[],spawnLaneCursor:0,testStations:[],testTowerIds:new Set(),testTuningMode:'zero',testEnemyType:GAME_BALANCE.arsenalTest.enemyType,testElapsed:0,wallSlowCells:new Set(),buildPhase:false,pending:[],stats:{spawned:{},hp:{},leaked:{},leakDamage:{}},repairs:0,bombCooldown:0,bombArmed:false,waveActive:false,intermission:0,spawnLeft:0,spawnTimer:0,waveSpawned:0,waveSpawnTotal:0,waveKills:0,waveBreaches:0,kills:0,breaches:0,testMode:false,endless:false,started:false,over:false,result:null};state.paths=spawnPoints.map(point=>pathfind(null,point));state.path=state.paths[0];uiSnapshot='';intelSnapshot='';uiNext=0;placementCache.key='';document.querySelectorAll('.tower-card').forEach(b=>b.classList.remove('active'));const selectionSection=$('#selectionSection'),buildSection=$('#buildSection');if(selectionSection)selectionSection.open=false;if(buildSection)buildSection.open=true;rebuildPathCache();rebuildWallSystems();updateUI()}
   function arsenalTestPath(row,fromLeft){const path=[],test=GAME_BALANCE.arsenalTest;if(fromLeft)for(let x=0;x<=test.leftPathEndColumn;x++)path.push({x,y:row});else for(let x=COLS-1;x>=test.rightPathEndColumn;x--)path.push({x,y:row});return path}
   function setupArsenalTest(){
     selected=null;selectedTowerId=null;selectedEnemyId=null;placementCache.key='';obstacles=[];scenery=[];flora=[];terrainReady=false;gridReady=false;
@@ -625,16 +639,13 @@
   function cycleSpeed(){if(userPaused){userPaused=false;speed=1}else if(speed===1)speed=2;else userPaused=true;syncSpeedButton();uiSnapshot='';updateUI()}
   function togglePause(){userPaused=!userPaused;syncSpeedButton();uiSnapshot='';updateUI()}
   function activeSpawnLane(wave,maxWaves,laneCount){if(laneCount<=1)return 0;const progress=Math.max(0,wave-1)/Math.max(1,maxWaves);return Math.min(laneCount-1,Math.floor(progress*laneCount))}
-  function startWave(){if(!state.started||state.waveActive||state.over||buildModePaused()||(!state.endless&&state.wave>=state.maxWaves))return;const mission=activeMission(),difficulty=GAME_BALANCE.levelDifficulty[mission.level]||1;state.intermission=0;state.wave++;state.waveActive=true;state.waveSpawned=0;const previousLane=state.spawnLaneCursor;state.spawnLaneCursor=activeSpawnLane(state.wave,state.maxWaves,state.paths.length);if(state.spawnLaneCursor!==previousLane)rebuildPathCache();state.waveKills=0;state.waveBreaches=0;if(state.testMode)for(const station of state.testStations){station.depotHp=station.maxDepotHp;station.hit=0}state.waveSpawnTotal=state.testMode?GAME_BALANCE.arsenalTest.batchesPerWave:Math.max(5,Math.round((6+state.wave)*mission.count*difficulty));state.spawnLeft=state.waveSpawnTotal;state.spawnTimer=0;sound('wave');pulse(state.testMode?`ARSENAL-TEST · ${arsenalTuningLabel()} · ${arsenalEnemyLabel()} · WELLE ${state.wave}`:`WELLE ${state.wave} / ${state.maxWaves}`);updateUI()}
-  /* Der Gegnermix kommt aus GAME_BALANCE.enemyPattern. Die Pruefreihenfolge ist
-     fest, der erste Treffer gewinnt — deshalb verdraengen seltene Spezialtypen
-     die haeufigen und nicht umgekehrt. Eine Mission kann einzelne Werte mit
-     'pattern' ueberschreiben, etwa weniger Kommandopanzer am Kampagnenstart.
-     eliteMid sind die zwei Kommandopanzer mitten in der letzten Welle. */
+  function startWave(){if(!state.started||state.waveActive||state.over||buildModePaused()||(!state.endless&&state.wave>=state.maxWaves))return;const mission=activeMission();state.intermission=0;state.wave++;state.waveActive=true;state.waveSpawned=0;const previousLane=state.spawnLaneCursor;state.spawnLaneCursor=activeSpawnLane(state.wave,state.maxWaves,state.paths.length);if(state.spawnLaneCursor!==previousLane)rebuildPathCache();state.waveKills=0;state.waveBreaches=0;if(state.testMode)for(const station of state.testStations){station.depotHp=station.maxDepotHp;station.hit=0}state.waveSpawnTotal=state.testMode?GAME_BALANCE.arsenalTest.batchesPerWave:Math.max(5,Math.round((6+state.wave)*levelFactor('count')));state.spawnLeft=state.waveSpawnTotal;state.spawnTimer=0;sound('wave');pulse(state.testMode?`ARSENAL-TEST · ${arsenalTuningLabel()} · ${arsenalEnemyLabel()} · WELLE ${state.wave}`:`WELLE ${state.wave} / ${state.maxWaves}`);updateUI()}
+  /* Der Gegnermix: feste Abstaende aus GAME_BALANCE.enemyMix, Phasengleiter und
+     Kommandopanzer je Level aus levelCurve. Die Pruefreihenfolge ist fest, der
+     erste Treffer gewinnt - seltene Spezialtypen verdraengen die haeufigen. */
   function enemyKindForSpawn(index){if(state.testMode)return arsenalEnemyKindForBatch(index);
-    const mission=activeMission(),pattern={eliteMid:2,...(GAME_BALANCE.enemyPattern[mission.level]||GAME_BALANCE.enemyPattern.LEICHT),...(mission.pattern||{})},total=state.waveSpawnTotal;
-    if(state.wave===state.maxWaves&&!state.endless){for(let k=0;k<pattern.eliteFinal;k++)if(index===total-1-k)return'elite';
-      if(pattern.eliteMid>=1&&index===Math.floor(total*.55)||pattern.eliteMid>=2&&index===Math.floor(total*.8))return'elite'}
+    const pattern={...GAME_BALANCE.enemyMix,phaser:levelFactor('phaser'),eliteLate:levelFactor('eliteLate'),eliteFinal:levelFactor('eliteFinal')},total=state.waveSpawnTotal;
+    if(state.wave===state.maxWaves&&!state.endless){for(let k=0;k<pattern.eliteFinal;k++)if(index===total-1-k)return'elite'}
     if(state.wave>=Math.ceil(state.maxWaves*.72)&&(state.endless||state.wave<state.maxWaves))for(let k=0;k<pattern.eliteLate;k++)if(index===Math.floor(total*(.6+.16*k)))return'elite';
     if(pattern.phaser&&state.wave>=4&&index%pattern.phaser===3)return'phaser';
     if(state.wave>=5&&index%pattern.splitter===2)return'splitter';
@@ -642,9 +653,11 @@
     if(state.wave>=3&&index%pattern.regenerator===1)return'regenerator';
     if(state.wave>=2&&index%pattern.runner===2%pattern.runner)return'runner';
     return'shard'}
+  /* Wert der Kampagnen-Kurve (GAME_BALANCE.levelCurve) fuer das laufende Level. */
+  function levelFactor(key){if(state?.testMode)return 1;const at=campaignIndex(activePlanetId,activeMissionIndex);return GAME_BALANCE.levelCurve[key][at]??1}
   /* Lebenspunkte einer Sondendrohne (hp 1.0) in dieser Welle der laufenden
      Mission; jeder Gegnertyp multipliziert seinen eigenen hp-Faktor darauf. */
-  function waveBaseHp(wave){const mission=activeMission(),difficulty=GAME_BALANCE.levelDifficulty[mission.level]||1,lateScale=1+Math.max(0,wave-GAME_BALANCE.enemyHpLateStart)*GAME_BALANCE.enemyHpLateStep,worldHp=GAME_BALANCE.worldHpRamp[activePlanetId]??1;return(GAME_BALANCE.enemyBaseHp+wave*GAME_BALANCE.enemyHpPerWave)*lateScale*mission.hp*difficulty*worldHp}
+  function waveBaseHp(wave){const lateScale=1+Math.max(0,wave-GAME_BALANCE.enemyHpLateStart)*GAME_BALANCE.enemyHpLateStep;return(GAME_BALANCE.enemyBaseHp+wave*GAME_BALANCE.enemyHpPerWave)*lateScale*levelFactor('hp')}
   /* BASIS-REPARATUR und ORBITALSCHLAG — Werte in GAME_BALANCE.baseRepair/bomb. */
   function supportWave(){return Math.max(1,state.wave)}
   function repairCost(){const r=GAME_BALANCE.baseRepair;return Math.round((r.base+r.perWave*supportWave())*(1+r.step*(state.repairs||0)))}
@@ -662,7 +675,10 @@
   function updateSupportUi(){const box=$('#supportActions');if(!box)return;const show=state.started&&!state.over&&!state.testMode;box.hidden=!show;if(!show)return;const repair=$('#repairBtn'),bomb=$('#bombBtn'),rc=repairCost(),bc=bombCost(),full=state.integrity>=state.maxIntegrity;
     repair.disabled=full||availableCredits()<rc;$('#repairCost').textContent=full?'VOLL':`${rc} E`;repair.title=full?'Basis ist unbeschädigt':`+${GAME_BALANCE.baseRepair.amount} Integrität für ${rc} Energie (Taste R)`;
     const loading=state.bombCooldown>0;bomb.disabled=!state.bombArmed&&(loading||state.buildPhase||availableCredits()<bc);bomb.classList.toggle('armed',!!state.bombArmed);$('#bombCost').textContent=state.bombArmed?'ZIELEN':loading?`${Math.ceil(state.bombCooldown)} s`:`${bc} E`;bomb.title=state.bombArmed?'Ziel auf der Karte antippen, Esc bricht ab':`Flächenschaden an einem frei gewählten Punkt für ${bc} Energie (Taste Q)`}
-  function createEnemy(kind,options={}){const def=enemyTypes[kind],mission=activeMission(),difficulty=GAME_BALANCE.levelDifficulty[mission.level]||1,mods=activePlanet().mods,p=options.path||state.path,hasSpawnIndex=Number.isFinite(options.spawnIndex),spawnIndex=hasSpawnIndex?clamp(Math.floor(options.spawnIndex),0,Math.max(0,p.length-2)):0,c=cellCenter(p[spawnIndex]||p[0]||spawn),wave=options.wave||state.wave,lateScale=1+Math.max(0,wave-GAME_BALANCE.enemyHpLateStart)*GAME_BALANCE.enemyHpLateStep,worldHp=GAME_BALANCE.worldHpRamp[activePlanetId]??1,maxHp=waveBaseHp(wave)*def.hp,maxShield=maxHp*(def.shield||0),pace=GAME_BALANCE.gamePace,enemySpeed=(pace.enemyBaseSpeed+wave*pace.enemySpeedPerWave)*def.speed*mission.speed*mods.enemySpeed*Math.sqrt(difficulty);return{id:state.nextEnemyId++,x:options.x??c.x,y:options.y??c.y,angle:options.angle??0,path:p,pi:options.pi??Math.min(spawnIndex+1,p.length-1),spawnLane:options.spawnLane??0,hp:maxHp,maxHp,speed:enemySpeed,baseSpeed:enemySpeed,r:def.r,armor:def.armor||0,regen:(def.regen||0)*mods.regen,regenDelay:0,split:def.split||0,bounty:Math.max(1,Math.round(def.bounty*mission.bounty*mods.bounty)),breach:def.breach,kind,elite:kind==='elite',name:def.name,trait:def.short,color:def.color,shield:maxShield,maxShield,hit:0,phase:Math.random()*6,lastHitTowerId:null,xpAwarded:false}}
+  /* Zaehlt fuer die Balance-Auswertung mit, was eine Mission schickt: Anzahl und
+     Lebenspunkte (inkl. Schild) je Gegnertyp. Kostet praktisch nichts. */
+  function createEnemy(kind,options={}){const e=buildEnemy(kind,options);const stats=state?.stats;if(stats){stats.spawned[kind]=(stats.spawned[kind]||0)+1;stats.hp[kind]=(stats.hp[kind]||0)+e.maxHp+(e.maxShield||0)}return e}
+  function buildEnemy(kind,options={}){const def=enemyTypes[kind],p=options.path||state.path,hasSpawnIndex=Number.isFinite(options.spawnIndex),spawnIndex=hasSpawnIndex?clamp(Math.floor(options.spawnIndex),0,Math.max(0,p.length-2)):0,c=cellCenter(p[spawnIndex]||p[0]||spawn),wave=options.wave||state.wave,maxHp=waveBaseHp(wave)*def.hp,maxShield=maxHp*(def.shield||0),pace=GAME_BALANCE.gamePace,enemySpeed=(pace.enemyBaseSpeed+wave*pace.enemySpeedPerWave)*def.speed*levelFactor('speed')*activePlanet().mods.enemySpeed;return{id:state.nextEnemyId++,x:options.x??c.x,y:options.y??c.y,angle:options.angle??0,path:p,pi:options.pi??Math.min(spawnIndex+1,p.length-1),spawnLane:options.spawnLane??0,hp:maxHp,maxHp,speed:enemySpeed,baseSpeed:enemySpeed,r:def.r,armor:def.armor||0,regen:(def.regen||0)*activePlanet().mods.regen,regenDelay:0,split:def.split||0,bounty:Math.max(1,Math.round(def.bounty*activePlanet().mods.bounty)),breach:def.breach,kind,elite:kind==='elite',name:def.name,trait:def.short,color:def.color,shield:maxShield,maxShield,hit:0,phase:Math.random()*6,lastHitTowerId:null,xpAwarded:false}}
   /* Jeder Pruefstand bekommt einen Gegner, den seine Waffe ueberhaupt treffen
      kann. Passt der gewaehlte Typ nicht zum Zielprofil, springt die Station auf
      einen Ersatzgegner um, sonst waere die Messung immer null. */
@@ -727,7 +743,7 @@
     /* Der Arsenal-Test ist eine Messbank, kein Einsatz: Er vergibt kein XP. */
     if(state.testMode){state.kills++;state.waveKills++;const tester=state.towers.find(t=>t.id===e.lastHitTowerId);if(tester)tester.kills=(tester.kills||0)+1;return 0}
     const earnedXp=Math.max(0,Math.round(GAME_BALANCE.experiencePerEnemy[e.kind]??2));progress.xp+=earnedXp;state.kills++;state.waveKills++;const killer=state.towers.find(t=>t.id===e.lastHitTowerId);if(killer){killer.kills=(killer.kills||0)+1;killer.xpEarned=(killer.xpEarned||0)+earnedXp}pushPriorityFloater({kind:'xp',x:e.x,y:e.y,z:e.elite?82:61,life:.9,max:.9,text:`+${earnedXp} XP`,color:'#ffe09a'});return earnedXp}
-  function breachBase(e){if(e.reached)return;e.reached=true;if(selectedEnemyId===e.id)selectedEnemyId=null;const loss=e.breach||8;if(e.testTarget){const station=state.testStations[e.testStation];if(station){station.depotHp=Math.max(0,station.depotHp-loss);station.depotDamage+=loss;station.leaks++;station.hit=1;state.breaches++;state.waveBreaches++;const c=cellCenter(station.depot);state.shocks.push({x:c.x,y:c.y,life:.48,max:.48,color:'#e08369'});if(state.floaters.length<42)state.floaters.push({x:c.x,y:c.y,z:48,life:.75,max:.75,text:`LAGER −${loss}`,color:'#efae85'});burst(c.x,c.y,'#c97c62',8,80)}return}state.integrity=Math.max(0,state.integrity-loss);state.breaches++;state.waveBreaches++;state.baseFlash=1;state.shake=Math.max(state.shake,11);const c=cellCenter(base);state.shocks.push({x:c.x,y:c.y,life:.9,max:.9,color:'#ff665d'});burst(c.x,c.y,'#ff8a62',32,245);state.floaters.push({x:c.x,y:c.y,z:92,life:1.15,max:1.15,text:`−${loss}% INTEGRITÄT`,color:'#ff8478'});sound('breach');pulse(`DURCHBRUCH · −${loss}%`);if(state.integrity<=0)end(false)}
+  function breachBase(e){if(e.reached)return;e.reached=true;if(selectedEnemyId===e.id)selectedEnemyId=null;const loss=e.breach||8;if(state.stats&&!e.testTarget){state.stats.leaked[e.kind]=(state.stats.leaked[e.kind]||0)+1;state.stats.leakDamage[e.kind]=(state.stats.leakDamage[e.kind]||0)+loss}if(e.testTarget){const station=state.testStations[e.testStation];if(station){station.depotHp=Math.max(0,station.depotHp-loss);station.depotDamage+=loss;station.leaks++;station.hit=1;state.breaches++;state.waveBreaches++;const c=cellCenter(station.depot);state.shocks.push({x:c.x,y:c.y,life:.48,max:.48,color:'#e08369'});if(state.floaters.length<42)state.floaters.push({x:c.x,y:c.y,z:48,life:.75,max:.75,text:`LAGER −${loss}`,color:'#efae85'});burst(c.x,c.y,'#c97c62',8,80)}return}state.integrity=Math.max(0,state.integrity-loss);state.breaches++;state.waveBreaches++;state.baseFlash=1;state.shake=Math.max(state.shake,11);const c=cellCenter(base);state.shocks.push({x:c.x,y:c.y,life:.9,max:.9,color:'#ff665d'});burst(c.x,c.y,'#ff8a62',32,245);state.floaters.push({x:c.x,y:c.y,z:92,life:1.15,max:1.15,text:`−${loss}% INTEGRITÄT`,color:'#ff8478'});sound('breach');pulse(`DURCHBRUCH · −${loss}%`);if(state.integrity<=0)end(false)}
   function moveToward(unit,x,y,dt,speed){const dx=x-unit.x,dy=y-unit.y,d=Math.hypot(dx,dy)||1,m=Math.min(d,speed*dt);unit.x+=dx/d*m;unit.y+=dy/d*m;unit.angle=Math.atan2(dy,dx);return d}
   function enemyBelongsToTower(e,towerId){return !state.testMode||!!state.testTowerIds?.has(towerId)&&e.testTarget&&e.testTowerId===towerId}
   /* Luftziele sind genau die Gegner, die Mauern und Routen ignorieren. Waffen ohne
@@ -762,7 +778,7 @@
     }compactAlive(state.shots);
   }
   function update(dt){if(!state.started||state.over||buildModePaused())return;updateMusic(dt);dt*=speed;if(state.testMode&&state.waveActive)state.testElapsed+=dt;for(const station of state.testStations)station.hit=Math.max(0,(station.hit||0)-dt*2.8);state.baseFlash=Math.max(0,state.baseFlash-dt*1.8);if(state.bombCooldown>0)state.bombCooldown=Math.max(0,state.bombCooldown-dt);state.impactFlash=Math.max(0,state.impactFlash-dt*2.8);if(!state.waveActive&&state.intermission>0){state.intermission=Math.max(0,state.intermission-dt);if(state.intermission<=0)startWave()}
-    if(state.waveActive&&state.spawnLeft){state.spawnTimer-=dt;if(state.spawnTimer<=0){const spawned=spawnEnemy(),pace=GAME_BALANCE.gamePace;state.spawnLeft=Math.max(0,state.spawnLeft-spawned);state.spawnTimer=state.testMode?GAME_BALANCE.arsenalTest.spawnInterval:Math.max(pace.minimumSpawnInterval,(pace.spawnIntervalBase-state.wave*pace.spawnIntervalWaveStep)*activeMission().spawn)*spawned}}
+    if(state.waveActive&&state.spawnLeft){state.spawnTimer-=dt;if(state.spawnTimer<=0){const spawned=spawnEnemy(),pace=GAME_BALANCE.gamePace;state.spawnLeft=Math.max(0,state.spawnLeft-spawned);state.spawnTimer=state.testMode?GAME_BALANCE.arsenalTest.spawnInterval:Math.max(pace.minimumSpawnInterval,(pace.spawnIntervalBase-state.wave*pace.spawnIntervalWaveStep)*levelFactor('spawn'))*spawned}}
     for(const e of state.enemies){e.hit=Math.max(0,e.hit-dt);e.wobble=Math.max(0,(e.wobble||0)-dt*1.1);e.regenDelay=Math.max(0,e.regenDelay-dt);e.slowTimer=Math.max(0,(e.slowTimer||0)-dt);const wallSlowed=!enemyTypes[e.kind].direct&&state.wallSlowCells.has(key(Math.floor(e.x/CELL),Math.floor(e.y/CELL))),weaponSlow=e.slowTimer>0?(e.slowFactor||1):1;e.slowed=wallSlowed||weaponSlow<1;e.speed=e.baseSpeed*(wallSlowed?activePlanet().mods.wallSlow:1)*weaponSlow;if(e.regen&&e.regenDelay<=0&&e.hp>0&&e.hp<e.maxHp)e.hp=Math.min(e.maxHp,e.hp+e.maxHp*e.regen*dt);if(e.hp<=0)continue;const dest=cellCenter(e.path[e.pi]);let dx=dest.x-e.x,dy=dest.y-e.y,d=Math.hypot(dx,dy);if(d<3){if(e.pi>=e.path.length-1){breachBase(e);if(state.over)break;continue}e.pi++;continue}const desiredAngle=Math.atan2(dy,dx);e.angle+=angleDelta(e.angle||0,desiredAngle)*Math.min(1,dt*7);const mv=Math.min(d,e.speed*dt);e.x+=dx/d*mv;e.y+=dy/d*mv;e.phase+=dt*(e.kind==='runner'||e.kind==='splinter'?6:4)}
     const splitDeaths=[];let progressDirty=false;state.enemies=state.enemies.filter(e=>{if(e.reached)return false;if(e.hp<=0){if(selectedEnemyId===e.id)selectedEnemyId=null;state.credits+=e.bounty||14;awardEnemyDefeat(e);progressDirty=true;if(e.split)splitDeaths.push(e);state.cracks.push({x:e.x,y:e.y,life:3,seed:Math.random()*9});state.shocks.push({x:e.x,y:e.y,life:.55,max:.55,color:e.color});burst(e.x,e.y,e.color,e.elite?28:15,e.elite?210:145);sound('kill');return false}return true});if(progressDirty)saveProgress();splitDeaths.forEach(spawnSplitChildren);
     if(state.over){updateUI();return}
@@ -771,7 +787,7 @@
       let jam=0;for(const e of state.enemies){if(e.kind!=='splinter'||e.hp<=0)continue;const jx=e.x-c.x,jy=e.y-c.y;if(jx*jx+jy*jy<4900){jam++;if(jam>=2)break}}t.jam=jam;t.cool-=dt/(1+.4*jam);const stats=towerStats(t),minRangeSq=stats.minRange?stats.minRange*stats.minRange:0,target=acquireDroneTarget(c,stats.range*stats.range,t.id,minRangeSq,t.type);if(t.cool<=0&&target){shoot(t,target);t.cool=stats.rate}}
     updateDrones(dt);updateShots(dt);
     for(const p of state.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.z=Math.max(0,p.z+p.vz*dt);p.vz-=120*dt;p.life-=dt}compactAlive(state.particles);for(const f of state.floaters){f.z+=28*dt;f.life-=dt}compactAlive(state.floaters);for(const c of state.cracks)c.life-=dt;compactAlive(state.cracks);for(const s of state.shocks)s.life-=dt;compactAlive(state.shocks);state.shake=Math.max(0,state.shake-dt*16);
-    if(state.waveActive&&!state.spawnLeft&&!state.enemies.length){state.waveActive=false;if(!state.endless&&state.wave===state.maxWaves)return end(true);const reward=state.testMode?GAME_BALANCE.arsenalTest.waveReward:Math.round((GAME_BALANCE.waveReward.base+state.wave*GAME_BALANCE.waveReward.perWave)*activeMission().bounty*activePlanet().mods.bounty*(activeMission().level==='FINAL'?.6:1));state.credits+=reward;state.intermission=state.testMode?GAME_BALANCE.arsenalTest.intermission:GAME_BALANCE.gamePace.normalIntermission;pulse(`${state.testMode?'TESTWELLE':'WELLE'} ${state.wave} GESÄUBERT · ${Math.ceil(state.intermission)}s BAUPAUSE`);updateSelectionPanel();updateUI();return}
+    if(state.waveActive&&!state.spawnLeft&&!state.enemies.length){state.waveActive=false;if(!state.endless&&state.wave===state.maxWaves)return end(true);const reward=state.testMode?GAME_BALANCE.arsenalTest.waveReward:Math.round((GAME_BALANCE.waveReward.base+state.wave*GAME_BALANCE.waveReward.perWave)*activePlanet().mods.bounty);state.credits+=reward;state.intermission=state.testMode?GAME_BALANCE.arsenalTest.intermission:GAME_BALANCE.gamePace.normalIntermission;pulse(`${state.testMode?'TESTWELLE':'WELLE'} ${state.wave} GESÄUBERT · ${Math.ceil(state.intermission)}s BAUPAUSE`);updateSelectionPanel();updateUI();return}
     updateUI()
   }
   function end(win){if(state.over)return;let autoUnlocked=[];if(win&&!state.testMode){markMissionCleared(activePlanetId,activeMissionIndex);autoUnlocked=syncAutoUnlocks()}state.over=true;state.result=win?'victory':'defeat';state.waveActive=false;state.intermission=0;state.spawnLeft=0;state.shake=0;state.baseFlash=win?0:.22;selected=null;selectedTowerId=null;selectedEnemyId=null;closeSelectionSection();sound(win?'victory':'defeat');const planet=activePlanet(),mission=activeMission(),waveGoal=state.endless?'∞':state.maxWaves,summary=`${state.kills} Feinde vernichtet · ${state.breaches} Durchbrüche · Welle ${state.wave}/${waveGoal}`+(autoUnlocked.length?` · ${autoUnlocked.map(type=>types[type].name).join(', ')} freigeschaltet – ab jetzt kommen Luftgegner`:'');
@@ -1135,7 +1151,7 @@
   function drawPending(){if(!state.pending?.length)return;const flicker=.55+.16*Math.sin(sceneTime*4);for(const p of state.pending){const c=cellCenter(p),x=p.x*CELL,y=p.y*CELL;ctx.save();ctx.globalAlpha=.5;poly([project(x,y,2),project(x+CELL,y,2),project(x+CELL,y+CELL,2),project(x,y+CELL,2)],'#8fc9bc22','#8fc9bc');ctx.globalAlpha=flicker;drawTower({id:-1,x:p.x,y:p.y,type:p.type,cool:0,angle:-.62,pulse:0,salvo:0,investment:p.cost,damageDealt:0,kills:0});ctx.globalAlpha=.9;const tag=project(c.x,c.y,46);ctx.fillStyle='#0b1a1f';ctx.strokeStyle='#8fc9bc';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(tag.x,tag.y,17,6.5,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#cdeee2';ctx.font='700 8px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('BAUEN?',tag.x,tag.y);ctx.textBaseline='alphabetic';ctx.restore()}}
   function drawGhost(){if(!selected||!pointerIsMouse||mouse.gx<0||mouse.gx>=COLS||mouse.gy<ROW_TOP||mouse.gy>=ROWS)return;const valid=placementValid(mouse.gx,mouse.gy),c=cellCenter({x:mouse.gx,y:mouse.gy}),type=types[selected],color=valid?'#8fc9bc':'#c8615d',x=mouse.gx*CELL,y=mouse.gy*CELL;ctx.save();ctx.globalAlpha=.42;poly([project(x,y,2),project(x+CELL,y,2),project(x+CELL,y+CELL,2),project(x,y+CELL,2)],color+'22',color);if(type.range){const segments=renderDetail===2?28:18;ctx.strokeStyle=color;ctx.setLineDash([8,6]);ctx.beginPath();for(let i=0;i<=segments;i++){const a=i/segments*Math.PI*2,p=project(c.x+Math.cos(a)*type.range,c.y+Math.sin(a)*type.range,2);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)}ctx.stroke();if(type.minRange){ctx.beginPath();for(let i=0;i<=segments;i++){const a=i/segments*Math.PI*2,p=project(c.x+Math.cos(a)*type.minRange,c.y+Math.sin(a)*type.minRange,2);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)}ctx.stroke()}ctx.setLineDash([])}ctx.globalAlpha=valid?.62:.38;drawTower({id:-1,x:mouse.gx,y:mouse.gy,type:selected,cool:0,angle:-.62,pulse:0,salvo:0,investment:type.cost,damageDealt:0,kills:0});ctx.restore()}
   function pulse(text){const b=$('#waveBanner');b.textContent=text;b.classList.remove('show');b.classList.toggle('compact',text.length>28);void b.offsetWidth;b.classList.add('show')}
-  function rosterForWave(wave){if(state.testMode)return state.testEnemyType==='mixed'?TEST_ENEMY_TYPES:[arsenalEnemyKindForBatch(0)];const level=activeMission().level,roster=['shard'];if(wave>=2)roster.push('runner');if(wave>=3)roster.push('regenerator');if(wave>=4)roster.push('armored');if(wave>=5)roster.push('splitter');if((level==='SCHWER'||level==='FINAL')&&wave>=6)roster.push('phaser');if(wave===state.maxWaves||wave>=Math.ceil(state.maxWaves*.72))roster.push('elite');return roster}
+  function rosterForWave(wave){if(state.testMode)return state.testEnemyType==='mixed'?TEST_ENEMY_TYPES:[arsenalEnemyKindForBatch(0)];const roster=['shard'];if(wave>=2)roster.push('runner');if(wave>=3)roster.push('regenerator');if(wave>=4)roster.push('armored');if(wave>=5)roster.push('splitter');if(levelFactor('phaser')&&wave>=4)roster.push('phaser');if(wave===state.maxWaves||wave>=Math.ceil(state.maxWaves*.72))roster.push('elite');return roster}
   function updateEnemyIntel(){const intel=$('#enemyIntel'),counts={};state.enemies.forEach(e=>counts[e.kind]=(counts[e.kind]||0)+1);const signature=`${state.wave}|${state.maxWaves}|${state.endless}|${state.testEnemyType}|${state.started}|${state.over}|${state.waveActive}|${Object.entries(counts).sort().join(';')}`;if(signature===intelSnapshot)return;intelSnapshot=signature;const active=Object.keys(counts);let title,roster;if(active.length){title=`AKTIV · WELLE ${state.wave}`;roster=active}else if(state.started&&!state.over&&(state.endless||state.wave<state.maxWaves)){const next=state.waveActive?state.wave:state.wave+1;title=state.endless?`${state.waveActive?'EINGEHEND':'NÄCHSTE WELLE'} · ${next} / ∞`:`${state.waveActive?'EINGEHEND':'NÄCHSTE WELLE'} · ${next}/${state.maxWaves}`;roster=rosterForWave(next)}else if(state.over){title=state.result==='victory'?'SEKTOR GESÄUBERT':'MISSION BEENDET';roster=[]}else{title='BEKANNTE EIGENSCHAFTEN';roster=['runner','armored','regenerator','splitter','elite']}intel.innerHTML=`<small>${title}</small>${roster.length?`<div class="enemy-roster">${roster.map(kind=>{const e=enemyTypes[kind],count=counts[kind];return`<span class="enemy-chip" title="${e.detail}">${e.name}${count?` ×${count}`:''}<i>${e.short} · −${e.breach}%</i></span>`}).join('')}</div>`:`<p>${state.result==='victory'?'Keine Biosignaturen verbleiben.':'Kolonieverbindung beendet.'}</p>`}`}
   function statPercent(type,axis,tower=null){const current=towerStats(tower||{type}),metric=axis==='rate'?60/current.rate:current[axis],weapons=Object.keys(types).filter(key=>types[key].tunable!==false),scaling=GAME_BALANCE.tuningPerLevel,maximum=Math.max(...weapons.map(key=>axis==='damage'?types[key].damage*(1+MAX_TUNING*scaling.damage):axis==='rate'?(60/types[key].rate)*(1+MAX_TUNING*scaling.fireRate):types[key].range*(1+MAX_TUNING*scaling.range)));return clamp(Math.round(metric/maximum*10)*10,10,100)}
   function statBar(label,percent,value){return`<div class="stat-bar"><span>${label}<b>${percent}% · ${value}</b></span><i><u style="width:${percent}%"></u></i></div>`}
@@ -1255,6 +1271,10 @@
     plan:(type,gx,gy)=>{if(selected!==type)setSelected(type);const before=state.pending.length;addPending(gx,gy);return state.pending.length>before},
     unplanLast:()=>{if(!state.pending.length)return false;removePending(state.pending.length-1);return true},
     commit:()=>{confirmPending();return state.towers.length},
+    stats:()=>JSON.parse(JSON.stringify(state.stats||{})),
+    repairCost:()=>repairCost(),
+    repair:()=>{const before=state.integrity;repairBase();return state.integrity>before},
+    setTuning:(type,level)=>{if(!progress.upgrades[type])return false;for(const axis of ['power','rate','range'])progress.upgrades[type][axis]=clamp(level,0,MAX_TUNING);state.towers.forEach(t=>syncDrones(t));return true},
     tuneAll:level=>{for(const type of Object.keys(types))if(types[type].tunable!==false)for(const axis of ['power','rate','range'])progress.upgrades[type][axis]=clamp(level,0,MAX_TUNING);saveProgress();state.towers.forEach(t=>syncDrones(t));return progress.upgrades}
   };
   addEventListener('message',event=>{const message=event.data;if(!message||message.channel!=='icebound-scorecard')return;if(message.action==='catalog')event.source?.postMessage({channel:'icebound-scorecard',action:'catalog-result',catalog:developerCatalog()},'*');if(message.action==='render')event.source?.postMessage({channel:'icebound-scorecard',action:'render-result',requestId:message.requestId,image:renderDeveloperReference(message.kind,message.id,message.options)},'*')});
@@ -1443,5 +1463,5 @@
     if(e.code==='KeyQ'&&!e.metaKey&&!e.ctrlKey){e.preventDefault();armBomb();return}
     if(e.code==='KeyI'&&codex&&!e.metaKey&&!e.ctrlKey){e.preventDefault();if(codex.hidden)openCodex();else closeCodex();return}
     if(e.key==='Escape'){if(state.bombArmed){disarmBomb();return}if(codex&&!codex.hidden){closeCodex();return}if(!$('#settingsOverlay').hidden){closeSettings();return}if(state.buildPhase)cancelPlacement();else{clearSelection();updateUI()}return}if(e.key==='Enter'&&state.buildPhase){e.preventDefault();confirmPending();return}if(e.code==='KeyB'&&!state.buildPhase){e.preventDefault();enterBuildPhase();return}if(/^Digit[1-8]$/.test(e.code)){const towerType=ARSENAL_TYPES[Number(e.code.at(-1))-1];setSelected(towerType)}if(e.code==='KeyW')setSelected('wall');if(e.code==='Space'){e.preventDefault();if(state.buildPhase)confirmPending();else startWave()}});setInterval(()=>{$('#clock').textContent=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})},1000);
-  syncAutoUnlocks();configureWorld();reset();renderWorldPicker();setMissionScreen(true);if(new URLSearchParams(location.search).has('developer-scorecard'))parent.postMessage({channel:'icebound-scorecard',action:'ready'},'*');else requestAnimationFrame(loop);
+  applyLevelCurve();syncAutoUnlocks();configureWorld();reset();renderWorldPicker();setMissionScreen(true);if(new URLSearchParams(location.search).has('developer-scorecard'))parent.postMessage({channel:'icebound-scorecard',action:'ready'},'*');else requestAnimationFrame(loop);
 })();
