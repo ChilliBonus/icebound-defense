@@ -373,8 +373,8 @@
     const s = P.snapshot();
     return {result: s.result, wave: s.wave + '/' + s.maxWaves, hp: Math.round(s.integrity), breaches: s.breaches,
             kills: s.kills, built: i, planSteps: order.length, extras, repairs, skipped, eLeft: s.credits,
-            towers: s.towers.map(t => ({t: t.type, x: t.x, y: t.y, dmg: t.dmg, kills: t.kills})),
-            stats: P.stats(), log, routes: s.paths};
+            towers: s.towers.map(t => ({t: t.type, x: t.x, y: t.y, dmg: t.dmg, kills: t.kills, inv: t.inv, seen: t.seen, act: t.act})),
+            typeHp: s.typeHp, stats: P.stats(), log, routes: s.paths};
   };
 
   /* ARSENAL-RAMPE: Staerkevergleich aller Waffen im Arsenal-Test. Jede Waffe

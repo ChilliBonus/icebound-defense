@@ -45,14 +45,14 @@ Die Entwickler-Seite `scorecard.html` lädt ihre Abbildungen direkt aus dem echt
 - Platzierte Kampftürme anklicken, um Feuerkraft, Taktung und Reichweite in je fünf Stufen dauerhaft für den gesamten Turmtyp aufzuwerten. Zehnteilige Balken vergleichen jeden aktuellen Wert mit dem höchsten Wert, den irgendeine vollständig getunte Waffe in derselben Kategorie erreichen kann. Deshalb bedeutet 100 Prozent immer das echte Arsenalmaximum und erscheint erst beim passenden Vollausbau. Upgrades kosten ausschließlich XP, nicht Einsatzenergie.
 - Jeder ausgewählte Turm und jede Mauer kann abgerissen werden. Zurückgezahlt werden 50 Prozent des gesamten investierten Werts einschließlich aller Tunings; Drohnen, Wegführung und Verlangsamungsfelder werden dabei sofort bereinigt.
 - Feldmauern kosten nur 30 Energie, verändern die Route und verlangsamen Gegner in angrenzenden Rasterfeldern planetenabhängig. Der Weg darf nie vollständig blockiert werden.
-- Railgun: durchschlägt mindestens fünf Gegner in einer Linie und ignoriert Panzerung; auf Umbra kommen zwei Ziele hinzu.
+- Railgun: pulsierender Dauerstrahl (1 s Strahl, dann Pause), durchschlägt mindestens fünf Gegner in einer Linie und ignoriert Panzerung und Schilde; Takt-Tuning verkürzt die Pause, auf Umbra kommen zwei Ziele hinzu.
 - Drohnennest: startet drei autonome Jäger mit Zwillingssalven, längeren Angriffsläufen und höherem Tempo. Verdant und Feuerkraft-Stufe 2 ergänzen weitere Jäger.
-- Raketenwerfer: feuert beschleunigende Lenkraketen mit begrenzter Drehrate, sichtbarer Kurvenbahn, Zielerfassung und Flächenschaden.
+- Raketenwerfer: feuert bis zu drei beschleunigende Lenkraketen auf unterschiedliche Luftziele, mit begrenzter Drehrate, sichtbarer Kurvenbahn und Flächenschaden. Jede Rakete trägt ein Drittel der Salve, die volle Wirkung gibt es erst gegen drei Ziele. Ab Level 6 fliegen Phasengleiter in Formationen zu zweit, ab Level 9 zu dritt.
 - Plasma-Mörser: langsames ballistisches Geschoss mit schwerem Flächenschaden.
 - Pulslaser: extrem schnelle Präzisionstreffer mit geringem Einzelschaden.
 - Kryo-Projektor: halbiert das Tempo getroffener Gegner für kurze Zeit.
 - Ion-Gatling: höchste Feuerrate, dafür kürzeste Reichweite und niedrigster Einzelschaden; trifft nur Bodenziele.
-- Schild-Brecher: überlädt gegnerische Schilde mit 140 Prozent Bonusschaden.
+- Schild-Brecher: Druckwelle im Kegel, trifft alle Bodengegner darin, ab dem neunten Ziel mit halber Kraft; Schilde nehmen 140 Prozent Bonusschaden.
 - Gegner treten als schwebende Sonden- und Abfangdrohnen, schwere Kettenpanzer, vierbeinige Reparatur- und Trägerläufer sowie ein geschützter Kommandopanzer auf.
 - Ein Klick auf einen Gegner öffnet einen Live-Scan mit Lebenspunkten, Tempo, Panzerung, Prämie, Durchbruchsschaden und Spezialfähigkeit.
 - Musik und Geräusche werden ohne externe Audiodateien im Browser synthetisiert. Der `♫`-Knopf schaltet den gesamten Ton stumm.

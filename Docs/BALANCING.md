@@ -192,6 +192,63 @@ Das Spiel zaehlt dabei je Gegnertyp mit, wie viele erscheinen, mit wie viel
 Leben und wer durchbricht (`ICEBOUND_PROBE.stats()`); `setTuning(typ, stufe)`
 tunt einzelne Tuerme.
 
+## Turm-Kennzahlen (seit 2026-09-26)
+
+Der reine Gesamtschaden je Turmart ist unfair: er waechst mit der Zahl der
+Tuerme, mit der Zeit, die ein Turm steht, und mit der Groesse seiner
+Zielgruppe (Bodengegner stellen ueber 90 % des Gegnerlebens, Luftgegner 5-8 %).
+Deshalb misst der Testbot kombinierte Kennzahlen. Grundsatz:
+**Reichweite und Standort gehoeren zur Leistung** und werden nicht
+herausgerechnet; gemessen wird an allen Gegnern seit Bau, nicht nur an denen,
+die in Reichweite kamen.
+
+**Messung im Spiel** (nur mit `?balance-probe`, `probeTowerExposure` in
+`game.js`):
+
+- Zielgruppe = was der Turm treffen kann (`canHit`): Laser und Rakete nur
+  Luft, Gatling, Moerser, Kryo, Drohne und Brecher nur Boden, Railgun beides.
+- `fieldHp` je Turm: Leben plus Schild aller Gegner seiner Zielgruppe, die seit
+  seinem Bau im Spiel waren. Jeder Gegner zaehlt einmal, mit dem Restleben beim
+  Bau (wenn er schon auf dem Feld war) bzw. beim Erscheinen. Mikrodrohnen aus
+  Traegerlaeufern zaehlen als eigene Gegner.
+- `fieldTime` je Turm: Sekunden seit Bau, in denen Gegner auf dem Feld waren.
+  Pausen zwischen den Wellen und die Bauphase zaehlen nicht.
+- `probeTypeHp` je Turmart: Gegnerleben der Zielgruppe ab dem ersten Turm dieser
+  Art, jeder Gegner nur einmal.
+- `investment`: der tatsaechlich bezahlte Preis inklusive Preissteigerung.
+
+**Kennzahlen je Turmart** (Summen ueber alle Tuerme dieser Art):
+
+| Kennzahl | Formel | Aussage |
+|---|---|---|
+| Anteil je Turm (Hauptwert) | Schaden / Summe ueber jeden Turm (fieldHp) | was ein einzelner Turm dieser Art in seiner Standzeit abtraegt; Turmzahl und Bauzeitpunkt herausgerechnet |
+| Schaden je 100 E und Minute | Schaden / Summe(investment x fieldTime / 60) x 100 | Feuerkraft je eingesetzter Energie und Zeit; Turmzahl und Preis herausgerechnet |
+| Anteil der Art | Schaden / probeTypeHp | was alle Tuerme dieser Art zusammen tragen; waechst mit der Anzahl |
+
+Beispiel Level 1 (7 Gatlings, alles getoetet): Anteil der Art 100 %, Anteil je
+Turm rund 18 %.
+
+Hinweise zur Deutung:
+
+- Die Anteile der Arten summieren sich nicht auf 100 %, weil mehrere Arten auf
+  dieselben Gegner schiessen (bewusst akzeptiert, 2026-09-26).
+- Saettigung: je mehr Tuerme einer Art dieselben Gegner beschiessen, desto
+  weniger bleibt fuer den einzelnen. Das ist echter abnehmender Nutzen. Ein
+  Vergleich bei gleicher Anzahl ohne Zusammenspiel ist der Arsenal-Test.
+- Schaden zaehlt wie im Spiel: abgetragenes Leben plus abgetragener Schild,
+  ohne Ueberschuss ueber das Restleben hinaus.
+- Mehrziel-Waffen (Railgun-Durchschuss, Brecher-Kegel, Moerser-Flaeche) duerfen
+  hoch liegen, das ist ihre Staerke. Die Stoerung durch Mikrodrohnen bleibt
+  drin, sie ist eine echte Schwaeche.
+- Kryo und Mauern wirken ueber Bremsung, nicht ueber Schaden. Dafuer fehlt noch
+  eine eigene Kennzahl (z. B. gewonnene Gegner-Sekunden).
+
+Im Bot-Ergebnis (`campaign_run.js`, Feld `byT`) steht je Turmart
+`[Anzahl, Schaden, Energie, Summe fieldHp, Summe fieldTime,
+Summe investment x fieldTime, probeTypeHp]`; der Labyrinth-Atlas zeigt Anteil je
+Turm und Schaden je 100 E und Minute als Balken, Anteil der Art und Rohschaden
+als Zahl.
+
 ## Turmstaerke im Arsenal-Test
 
 ```js
@@ -227,9 +284,11 @@ Takt (einzige Ausnahme: Gatling 7 → 9, siehe unten).
 | Gatling | Luft + Boden, 130 E, Schaden 7 | nur Boden, 120 E, Schaden 9,45 |
 | Freischaltung | alles ab Start per XP | Moerser, Kryo ab Level 2 (je 130 XP); Brecher, Laser, Rakete ab 3; Drohne ab 5; Railgun ab 6; Laser automatisch in Level 3 |
 | Turmkosten | Railgun 145, Drohne 175, Moerser 185, Laser 135, Kryo 155, Brecher 205 | Railgun 175, Drohne 200, Moerser 175, Laser 145, Kryo 150, Brecher 190 |
-| Railgun-Schaden | 108 | 91,8 (−15 %) |
+| Railgun-Schaden | 108 | 68 je Strahlsekunde; Takt-Tuning wirkt seit 2026-09-26 (verkuerzt die Pause), dafuer Grundschaden von 91,8 gesenkt |
 | Uebrige Bodenwaffen | – | +5 % Schaden |
 | Laser / Rakete | Schaden 10 / 105 | 19,25 / 201,7 (+92 %) |
+| Schild-Brecher | Druckwelle ohne Zielgrenze, Schildbonus auch auf Ueberlauf | ab dem 9. Ziel im Kegel halber Schaden, Schildbonus nur auf den Schildanteil; Grundschaden 100,8 -> 85 |
+| Phasengleiter | einzeln | in Formationen: ab Level 6 zu zweit, ab Level 9 zu dritt (`levelCurve.airGroup`), Anteil unveraendert |
 | Level-Verlauf | Saegezahn je Planet (Leicht/Mittel/Schwer), Faktoren je Planet und Mission | eine Level-Tabelle `levelCurve`: Leben, Tempo, Anzahl, Abstand, Startenergie (520–780), Wellen (8–25), Luftgegner ab Level 3, Kommandopanzer – alles gleichmaessig steigend |
 | Praemie | je Mission und Planet unterschiedlich, Finale −40 % | ueberall gleich, keine Kuerzung |
 | Anzeige | Leicht/Mittel/Schwer | Levelnummer und Sterne (1–5) |
@@ -245,6 +304,23 @@ Luftabwehr (5/5/6 Tuerme). Knapp: Level 5 (20 % Integritaet, nur eine
 Strategie) und Level 6 (9 %).
 
 Erkenntnisse, die man beim naechsten Mal nicht neu herausfinden muss:
+
+- Rakete und Brecher 2026-09-26: Die fairen Turm-Kennzahlen zeigten die Rakete
+  weit hinter dem Laser (einzelne Phasengleiter, nie drei Ziele) und den
+  Brecher im Spaetspiel beim Dreifachen aller anderen. Jetzt fliegen
+  Phasengleiter ab Level 6 in Formationen (Rakete bekommt ihre drei Ziele) und
+  der Brecher-Grundschaden sinkt auf 85. Der Schildbonus war nicht der Grund
+  (Test mit 2,0). Finale nach "Energie noetig" weiterhin nicht leichter
+  (81 % statt 77 %); die Integritaet am Ende schwankt stark und haengt vor
+  allem an der Luftabwehr im Plan, sie taugt nicht als alleiniger Massstab.
+
+- Mechanik-Korrekturen 2026-09-26 (aus der Gesamtanalyse): Railgun-Takt wirkte
+  nicht (feste 1 s Strahl / 1 s Pause) und sie war trotzdem die staerkste
+  Waffe. Jetzt verkuerzt Takt-Tuning die Pause wie bei jedem Turm, der
+  Grundschaden sinkt auf 68 (Finale im Bot unveraendert 40 % Integritaet).
+  Schild-Brecher: Kegel trifft alle, ab dem 9. Ziel halb; mit 6 vollen Zielen
+  kippte Level 5. Raketen: ein Einzelziel bekommt nur ein Drittel der Salve,
+  das ist Absicht (Designentscheidung).
 
 - Die Railgun trug den Einstieg allein; ohne sie entscheiden die
   Kommandopanzer (Schild plus Panzerung) die ersten Level.

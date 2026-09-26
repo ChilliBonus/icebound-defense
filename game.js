@@ -54,14 +54,14 @@
       ]}
   ];
   const types={
-    rail:{name:'RAILGUN',cost:145,range:275,rate:2.15,damage:108,pierce:5,color:'#8deaff',detail:'Extrem kräftiger Linien-Schuss. Langsam, aber durchschlägt fünf Ziele und jede Panzerung.'},
+    rail:{name:'RAILGUN',cost:145,range:275,rate:2.15,damage:108,pierce:5,color:'#8deaff',detail:'Dauerstrahl in Pulsen: eine Sekunde Strahl, dann Pause. Durchschlägt fünf Ziele, jede Panzerung und jeden Schild. Takt-Tuning verkürzt die Pause.'},
     drone:{name:'DRONENNEST',cost:175,range:225,rate:.42,damage:12,drones:3,color:'#a594ff',targets:'ground',detail:'Mobile Jäger verfolgen Ziele außerhalb starrer Feuerwinkel und erzeugen konstanten Mehrfachbeschuss.'},
     rocket:{name:'RAKETENWERFER',cost:215,range:290,rate:3.25,damage:105,missiles:3,splash:88,turn:2.6,color:'#ffd36a',targets:'air',detail:'Feuert bis zu drei zielsuchende Raketen auf unterschiedliche Gegner. Der Salvenschaden wird gleichmäßig auf drei Flugkörper verteilt.'},
     mortar:{name:'PLASMA-MÖRSER',cost:185,range:310,minRange:156,rate:2.4,damage:70,color:'#ff9e6a',splash:76,targets:'ground',detail:'Ballistischer Flächenschlag mit der höchsten Reichweite im Arsenal. Feuert in einem Ring: nahe Gegner kann er nicht treffen.'},
     laser:{name:'PULSLASER',cost:135,range:190,rate:.2,damage:10,color:'#ff6f91',beam:true,targets:'air',detail:'Sehr schneller Präzisionsstrahl. Geringer Einzelschaden, aber fast ohne Feuerpause.'},
     cryo:{name:'KRYO-PROJEKTOR',cost:155,range:205,rate:.8,damage:7,slow:.32,slowTime:3.6,chain:4,color:'#8fffe1',beam:true,targets:'ground',detail:'Schießt einen Kälteblitz, der auf weitere Gegner überspringt und ihr Tempo auf ein Drittel drückt. Kaum Schaden, dafür die stärkste Verlangsamung im Arsenal.'},
     gatling:{name:'ION-GATLING',cost:120,range:165,rate:.11,damage:7,color:'#ffc45d',beam:true,targets:'ground',detail:'Höchste Feuerrate im Arsenal, aber kurze Reichweite und sehr leichter Einzelschaden. Trifft nur Bodenziele.'},
-    disruptor:{name:'SCHILD-BRECHER',cost:205,range:260,rate:2.75,damage:96,shieldBonus:2.4,color:'#d58cff',beam:true,targets:'ground',detail:'Überlädt Schilde mit 140 % Bonusschaden. Langsam, teuer und gegen ungepanzerte Schwärme ineffizient.'},
+    disruptor:{name:'SCHILD-BRECHER',cost:205,range:260,rate:2.75,damage:96,shieldBonus:2.4,color:'#d58cff',beam:true,targets:'ground',detail:'Druckwelle im Kegel: trifft alle Bodengegner darin, ab dem neunten Ziel mit halber Kraft. Schilde nehmen 140 % Bonusschaden. Langsam und teuer.'},
     wall:{name:'FELDMAUER',cost:35,range:0,rate:0,damage:0,color:'#b9d0c5',tunable:false,detail:'Günstiges Sperrsegment zur Wegführung. Eine vollständige Blockade bleibt verboten.'}
   };
   /* Reihenfolge in Baumenue, Bauleiste und Werkstatt = Reihenfolge der
@@ -131,6 +131,8 @@
      71 % des Bedarfs für alle Freischaltungen plus Volltuning. Der Rest kommt
      aus etwa drei wiederholten Missionen (~25 % der Level).
      ===================================================================== */
+  // Testbot-Zugang und Turm-Kennzahlen, siehe ICEBOUND_PROBE weiter unten.
+  const BALANCE_PROBE=new URLSearchParams(location.search).has('balance-probe');
   const GAME_BALANCE={
     baseIntegrity: 100,
     enemyBaseHp: 70,
@@ -151,6 +153,9 @@
          credits     Startenergie
          waves       Wellenzahl
          phaser      jeder n-te Gegner ist ein Phasengleiter (Luft), 0 = keine
+         airGroup    Phasengleiter fliegen in Formationen dieser Groesse direkt
+                     hintereinander; ihr Anteil bleibt gleich (seit 2026-09-26,
+                     gibt dem Raketenwerfer seine drei Ziele)
          eliteLate   Kommandopanzer je spaeter Welle (ab 72 % der Wellen)
          eliteFinal  Kommandopanzer in der Schlusswelle
          stars       Sterne in der Levelauswahl
@@ -163,6 +168,7 @@
       credits:    [520, 540, 560, 580, 600, 625, 650, 670, 700, 725, 750, 780],
       waves:      [  8,  10,  11,  13,  14,  16,  17,  19,  20,  22,  23,  25],
       phaser:     [  0,   0,   9,   9,   8,   8,   7,   7,   6,   6,   5,   5],
+      airGroup:   [  1,   1,   1,   1,   1,   2,   2,   2,   3,   3,   3,   3],
       eliteLate:  [  0,   0,   0,   1,   1,   1,   1,   2,   2,   2,   3,   3],
       eliteFinal: [  0,   1,   1,   2,   2,   3,   4,   4,   5,   6,   7,   8],
       stars:      [  1,   1,   2,   2,   2,   3,   3,   3,   4,   4,   4,   5],
@@ -314,15 +320,35 @@
        mit ungetunten Lasern zu halten, dort gehen alle XP in Freischaltungen.
        Alle anderen Schadens- und Taktwerte bleiben, weil voll getunt alle
        Waffen nah beieinander liegen. */
+    /* Railgun (seit 2026-09-26): Dauerstrahl-Puls statt Einzelschuss. 'on'
+       Sekunden Strahl, dann 'pause'. Takt-Tuning verkuerzt die Pause wie bei
+       jedem Turm um tuningPerLevel.fireRate je Stufe (voll getunt 1 s ->
+       0,56 s). Vorher war der Takt der Railgun wirkungslos - und sie trotzdem
+       die staerkste Waffe. Deshalb sinkt ihr Grundschaden (weapons.rail). */
+    railBeam: { on: 1, pause: 1 },
+    /* Schild-Brecher: die Druckwelle trifft alle Bodengegner im Kegel. Ab dem
+       Ziel Nummer 'fullTargets + 1' nur noch 'falloff' des Schadens, damit er
+       in dichten Spaetwellen nicht mit der Gegnerzahl unbegrenzt waechst
+       (vorher bis 56 % des Gesamtschadens). Der Schildbonus gilt nur fuer den
+       Teil, der den Schild abtraegt, nicht fuer den Ueberlauf in die HP. */
+    disruptorWave: { fullTargets: 8, falloff: 0.5 },
+    /* Raketenwerfer: bewusst so gewollt (Designentscheidung 2026-09-26) - jede Rakete
+       sucht ein anderes Ziel, ein Einzelziel bekommt nur ein Drittel der Salve.
+       Die Staerke kommt erst gegen Gruppen von drei Luftgegnern. */
     weapons:{
-      rail:      { cost: 175, damage: 91.8, rate: 2.15, range: 275 },
+      /* rate = ganzer Zyklus aus Strahl und Pause (railBeam), nur fuer Anzeige
+         und Vergleichsbericht; im Kampf zaehlt railBeam. */
+      rail:      { cost: 175, damage: 68, rate: 2.00, range: 275 },
       drone:     { cost: 200, damage:  12.6, rate: 0.42, range: 225 },
       rocket:    { cost: 215, damage: 201.7, rate: 3.25, range: 290, missiles: 3 },
       mortar:    { cost: 175, damage:  73.5, rate: 2.40, range: 310, minRange: 156 },
       laser:     { cost: 145, damage:  19.25, rate: 0.20, range: 190 },
       cryo:      { cost: 150, damage:   7.35, rate: 0.80, range: 205 },
       gatling:   { cost: 120, damage:   9.45, rate: 0.11, range: 165 },
-      disruptor: { cost: 190, damage:  100.8, rate: 2.75, range: 260 },
+      /* Brecher 2026-09-26: 100,8 -> 85. Die faire Turm-Kennzahl zeigte ihn im
+         Spaetspiel bei rund dem Dreifachen aller anderen Tuerme je Energie und
+         Minute; der Schildbonus war nicht der Grund (Test mit 2,0). */
+      disruptor: { cost: 190, damage:  85, rate: 2.75, range: 260 },
       /* Bewusst der billigste Bauteil im Spiel: das Labyrinth ist die
          Hauptwaffe, nicht ein Nebenprodukt. */
       wall:      { cost:  30 }
@@ -579,7 +605,7 @@
     const angleIndex=((Math.round(angle/(Math.PI*2)*ROCKET_ANGLE_STEPS)%ROCKET_ANGLE_STEPS)+ROCKET_ANGLE_STEPS)%ROCKET_ANGLE_STEPS,cached=rocketSpriteCache.get(angleIndex);if(cached)return cached;const sprite=document.createElement('canvas');sprite.width=sprite.height=ROCKET_SPRITE_SIZE;const paint=sprite.getContext('2d'),center=ROCKET_SPRITE_SIZE/2,dir=angleIndex/ROCKET_ANGLE_STEPS*Math.PI*2,fx=Math.cos(dir),fy=Math.sin(dir),sx=-fy,sy=fx,point=(forward,side,z=0)=>({x:center+fx*forward+sx*side,y:center+(fy*forward+sy*side)*CAMERA.compression-z}),path=(points,fill)=>{paint.beginPath();points.forEach((p,i)=>i?paint.lineTo(p.x,p.y):paint.moveTo(p.x,p.y));paint.closePath();paint.fillStyle=fill;paint.fill()},tail=point(-10,0),nose=point(13,0,1),left=point(-2,-4),right=point(-2,4),top=point(1,0,4),finL=point(-8,-7,-1),finR=point(-8,7,-1),exhaust=point(-12,0);
     paint.lineCap='round';paint.lineJoin='round';path([tail,left,top],'#303638');path([left,nose,top],'#737a73');path([nose,right,top],'#505752');path([right,tail,top],'#252b2d');paint.strokeStyle='#3b4140';paint.lineWidth=3;paint.beginPath();paint.moveTo(finL.x,finL.y);paint.lineTo(tail.x,tail.y);paint.lineTo(finR.x,finR.y);paint.stroke();paint.fillStyle='#e6d59b';paint.beginPath();paint.arc(nose.x,nose.y,1.8,0,Math.PI*2);paint.fill();sprite._rocketGeometry={exhaust};rocketSpriteCache.set(angleIndex,sprite);return sprite;
   }
-  function towerStats(t){const base=types[t.type],mods=activePlanet().mods,isTestTower=state?.testMode&&t.testStation!=null,currentTune=progress.upgrades[t.type]||{power:0,rate:0,range:0},testLevel=state?.testTuningMode==='max'?MAX_TUNING:0,tune=!isTestTower||state.testTuningMode==='current'?currentTune:{power:testLevel,rate:testLevel,range:testLevel},scaling=GAME_BALANCE.tuningPerLevel,power=tune.power||0,rate=tune.rate||0,range=tune.range||0;return{damage:base.damage*(1+power*scaling.damage),rate:base.rate?base.rate/(1+rate*scaling.fireRate):0,range:base.range*(1+range*scaling.range),splash:(base.splash||0)*(1+power*.09)*(base.splash?mods.splash:1),pierce:(base.pierce||0)+Math.floor(power/2)+(t.type==='rail'?mods.railPierce:0),turn:(base.turn||0)*(1+rate*.08),drones:base.drones||0,missiles:base.missiles||1,chain:(base.chain||0)+Math.floor(power/3),slow:base.slow||0,slowTime:(base.slowTime||0)*(1+rate*.08),shieldBonus:base.shieldBonus||1,minRange:(base.minRange||0)*(1+range*scaling.range),power,rateLevel:rate,rangeLevel:range,total:power+rate+range}}
+  function towerStats(t){const base=types[t.type],mods=activePlanet().mods,isTestTower=state?.testMode&&t.testStation!=null,currentTune=progress.upgrades[t.type]||{power:0,rate:0,range:0},testLevel=state?.testTuningMode==='max'?MAX_TUNING:0,tune=!isTestTower||state.testTuningMode==='current'?currentTune:{power:testLevel,rate:testLevel,range:testLevel},scaling=GAME_BALANCE.tuningPerLevel,power=tune.power||0,rate=tune.rate||0,range=tune.range||0;return{damage:base.damage*(1+power*scaling.damage),rate:t.type==='rail'?GAME_BALANCE.railBeam.on+railPause(rate):base.rate?base.rate/(1+rate*scaling.fireRate):0,range:base.range*(1+range*scaling.range),splash:(base.splash||0)*(1+power*.09)*(base.splash?mods.splash:1),pierce:(base.pierce||0)+Math.floor(power/2)+(t.type==='rail'?mods.railPierce:0),turn:(base.turn||0)*(1+rate*.08),drones:base.drones||0,missiles:base.missiles||1,chain:(base.chain||0)+Math.floor(power/3),slow:base.slow||0,slowTime:(base.slowTime||0)*(1+rate*.08),shieldBonus:base.shieldBonus||1,minRange:(base.minRange||0)*(1+range*scaling.range),power,rateLevel:rate,rangeLevel:range,total:power+rate+range}}
   function tuningCost(t,axis){const tune=progress.upgrades[t.type],level=tune[axis],total=tune.power+tune.rate+tune.range,cost=GAME_BALANCE.tuningCost;return cost.base+level*cost.perLevel+Math.floor(total/3)*cost.perRank}
   function towerInvestment(t){return t.investment??types[t.type].cost}
   function builtCount(type){return state.towers.filter(t=>t.type===type).length+(state.pending?.filter(p=>p.type===type).length||0)}
@@ -647,7 +673,7 @@
     const pattern={...GAME_BALANCE.enemyMix,phaser:levelFactor('phaser'),eliteLate:levelFactor('eliteLate'),eliteFinal:levelFactor('eliteFinal')},total=state.waveSpawnTotal;
     if(state.wave===state.maxWaves&&!state.endless){for(let k=0;k<pattern.eliteFinal;k++)if(index===total-1-k)return'elite'}
     if(state.wave>=Math.ceil(state.maxWaves*.72)&&(state.endless||state.wave<state.maxWaves))for(let k=0;k<pattern.eliteLate;k++)if(index===Math.floor(total*(.6+.16*k)))return'elite';
-    if(pattern.phaser&&state.wave>=4&&index%pattern.phaser===3)return'phaser';
+    if(pattern.phaser&&state.wave>=4){const g=Math.max(1,levelFactor('airGroup')|0),slot=index%(pattern.phaser*g);if(slot>=3&&slot<3+g)return'phaser'}
     if(state.wave>=5&&index%pattern.splitter===2)return'splitter';
     if(state.wave>=4&&index%pattern.armored===4%pattern.armored)return'armored';
     if(state.wave>=3&&index%pattern.regenerator===1)return'regenerator';
@@ -704,7 +730,11 @@
     hits.forEach((h,i)=>damage(h.e,ty.damage*(1-i*.08),'rail',t.id));
     state.shots.push({kind:'rail',x:muzzle.x,y:muzzle.y,z:muzzle.z,tx:c.x+dx*ty.range,ty:c.y+dy*ty.range,hits:hits.map(h=>({x:h.e.x,y:h.e.y})),life:.22,max:.22,color:types.rail.color,towerId:t.id});burst(muzzle.x,muzzle.y,types.rail.color,8,120);sound('rail',muzzle.x);
   }
-  const RAIL_BEAM_ON=1,RAIL_BEAM_PAUSE=1,RAIL_TICK=.1;
+  const RAIL_TICK=.1;
+  function railPause(rateLevel){return GAME_BALANCE.railBeam.pause/(1+(rateLevel||0)*GAME_BALANCE.tuningPerLevel.fireRate)}
+  /* Schildbonus nur auf den Teil, der den Schild abtraegt: Rueckgabe ist der
+     Rohschaden fuer damage(), der Ueberlauf traegt keinen Bonus. */
+  function shieldBoosted(e,amount,bonus){if(!(e.shield>0)||!(bonus>1))return amount;const boosted=amount*bonus;return boosted<=e.shield?boosted:e.shield+(amount-e.shield/bonus)}
   // Dauerstrahl-Puls der Railgun: durchgehender Strahl mit Damage-over-Time
   // entlang der Durchschlagslinie, waehrend t.beamTime laeuft.
   function railBeamTick(t,target,stats,dt){
@@ -713,7 +743,7 @@
     t.beamAccum=(t.beamAccum||0)+dt;if(t.beamAccum>=RAIL_TICK){const chunk=stats.damage*t.beamAccum;hits.forEach((h,i)=>damage(h.e,chunk*(1-i*.08),'rail',t.id));t.beamAccum=0}
     t.beamEndX=c.x+dx*stats.range;t.beamEndY=c.y+dy*stats.range;t.beamHits=hits.map(h=>({x:h.e.x,y:h.e.y}))
   }
-  function beamShot(t,target){const muzzle=weaponMuzzle(t),base=types[t.type],stats=towerStats(t),hit=[];let current=target;for(let i=0;i<Math.max(1,stats.chain);i++){if(!current)break;hit.push(current);const amount=stats.damage*Math.pow(.72,i)*(current.shield>0?stats.shieldBonus:1);damage(current,amount,t.type,t.id);if(stats.slow){current.slowFactor=Math.min(current.slowFactor||1,stats.slow);current.slowTimer=Math.max(current.slowTimer||0,stats.slowTime)}const next=state.enemies.filter(e=>e.hp>0&&enemyBelongsToTower(e,t.id)&&canHit(t.type,e)&&!hit.includes(e)&&Math.hypot(e.x-current.x,e.y-current.y)<105).sort((a,b)=>Math.hypot(a.x-current.x,a.y-current.y)-Math.hypot(b.x-current.x,b.y-current.y))[0];current=next}const beamKind=t.type==='cryo'?'lightning':'rail';let from=muzzle;hit.forEach(enemy=>{state.shots.push({kind:beamKind,x:from.x,y:from.y,z:from.z??20,tx:enemy.x,ty:enemy.y,hits:[],life:t.type==='gatling'?.07:.15,max:t.type==='gatling'?.07:.15,color:base.color,towerId:t.id});from={x:enemy.x,y:enemy.y,z:20}});burst(muzzle.x,muzzle.y,base.color,4,70);if(t.type==='gatling')ejectCasings(t);sound(t.type,muzzle.x)}
+  function beamShot(t,target){const muzzle=weaponMuzzle(t),base=types[t.type],stats=towerStats(t),hit=[];let current=target;for(let i=0;i<Math.max(1,stats.chain);i++){if(!current)break;hit.push(current);const amount=shieldBoosted(current,stats.damage*Math.pow(.72,i),stats.shieldBonus);damage(current,amount,t.type,t.id);if(stats.slow){current.slowFactor=Math.min(current.slowFactor||1,stats.slow);current.slowTimer=Math.max(current.slowTimer||0,stats.slowTime)}const next=state.enemies.filter(e=>e.hp>0&&enemyBelongsToTower(e,t.id)&&canHit(t.type,e)&&!hit.includes(e)&&Math.hypot(e.x-current.x,e.y-current.y)<105).sort((a,b)=>Math.hypot(a.x-current.x,a.y-current.y)-Math.hypot(b.x-current.x,b.y-current.y))[0];current=next}const beamKind=t.type==='cryo'?'lightning':'rail';let from=muzzle;hit.forEach(enemy=>{state.shots.push({kind:beamKind,x:from.x,y:from.y,z:from.z??20,tx:enemy.x,ty:enemy.y,hits:[],life:t.type==='gatling'?.07:.15,max:t.type==='gatling'?.07:.15,color:base.color,towerId:t.id});from={x:enemy.x,y:enemy.y,z:20}});burst(muzzle.x,muzzle.y,base.color,4,70);if(t.type==='gatling')ejectCasings(t);sound(t.type,muzzle.x)}
   function ejectCasings(t){if(state.particles.length>170)return;const c=cellCenter(t),angle=t.angle||0,dx=Math.cos(angle),dy=Math.sin(angle),nx=-dy,ny=dx,side=(t.salvo=(t.salvo||0)+1)%2?1:-1,rx=c.x-dx*10,ry=c.y-dy*10;state.particles.push({x:rx+nx*side*6,y:ry+ny*side*6,z:40,vx:nx*side*46-dx*18+(Math.random()-.5)*18,vy:ny*side*46-dy*18+(Math.random()-.5)*18,vz:52+Math.random()*28,life:.5+Math.random()*.22,max:.72,size:2,color:'#d9b45a'})}
   function waveShot(t,target){const c=cellCenter(t),stats=towerStats(t),angle=Math.atan2(target.y-c.y,target.x-c.x);t.angle=angle;t.pulse=1;state.shots.push({kind:'wave',ox:c.x,oy:c.y,angle,r:16,maxR:stats.range,speed:440,half:.5,damage:stats.damage,shieldBonus:stats.shieldBonus,hitIds:new Set(),life:1.3,max:1.3,color:types.disruptor.color,towerId:t.id});burst(c.x,c.y,types.disruptor.color,6,80);sound('wave',c.x)}
   function rocketVolleyTargets(t,primary,rangeSq,limit){
@@ -770,7 +800,7 @@
   function compactAlive(items){let write=0;for(let read=0;read<items.length;read++){const item=items[read];if(item.life>0)items[write++]=item}items.length=write}
   function updateShots(dt){
     for(const s of state.shots){s.life-=dt;s.fly=(s.fly||0)+dt;if(s.kind==='rail'||s.kind==='lightning')continue;
-      if(s.kind==='wave'){s.r+=s.speed*dt;for(const e of state.enemies){if(e.hp<=0||e.reached||!enemyBelongsToTower(e,s.towerId)||s.hitIds.has(e.id)||!canHit('disruptor',e))continue;const dx=e.x-s.ox,dy=e.y-s.oy;if(dx*dx+dy*dy>s.r*s.r)continue;if(Math.abs(angleDelta(s.angle,Math.atan2(dy,dx)))>s.half)continue;s.hitIds.add(e.id);damage(e,s.damage*(e.shield>0?s.shieldBonus:1),'disruptor',s.towerId);e.wobble=Math.max(e.wobble||0,.3)}if(s.r>=s.maxR)s.life=0;continue}
+      if(s.kind==='wave'){s.r+=s.speed*dt;for(const e of state.enemies){if(e.hp<=0||e.reached||!enemyBelongsToTower(e,s.towerId)||s.hitIds.has(e.id)||!canHit('disruptor',e))continue;const dx=e.x-s.ox,dy=e.y-s.oy;if(dx*dx+dy*dy>s.r*s.r)continue;if(Math.abs(angleDelta(s.angle,Math.atan2(dy,dx)))>s.half)continue;const wave=GAME_BALANCE.disruptorWave,base=s.damage*(s.hitIds.size<wave.fullTargets?1:wave.falloff);s.hitIds.add(e.id);damage(e,shieldBoosted(e,base,s.shieldBonus),'disruptor',s.towerId);e.wobble=Math.max(e.wobble||0,.3)}if(s.r>=s.maxR)s.life=0;continue}
       if(s.kind==='rocket'){
         if(!s.target||s.target.hp<=0||s.target.reached)s.target=retargetRocket(s);let targetDistance=0;if(s.target){const targetDx=s.target.x-s.x,targetDy=s.target.y-s.y;targetDistance=Math.sqrt(targetDx*targetDx+targetDy*targetDy);const desired=Math.atan2(targetDy,targetDx),turn=s.turn*(.55+Math.min(1,s.fly*.7))*dt;s.angle+=Math.max(-turn,Math.min(turn,angleDelta(s.angle,desired)))}s.speed=Math.min(245,s.speed+105*dt);s.x+=Math.cos(s.angle)*s.speed*dt;s.y+=Math.sin(s.angle)*s.speed*dt;s.trailTick+=dt;if(s.target){const dx=s.target.x-s.x,dy=s.target.y-s.y;targetDistance=Math.sqrt(dx*dx+dy*dy)}s.z=s.target?20+Math.min(55,targetDistance*.24):48;if(s.trailTick>.025){s.trail.push({x:s.x,y:s.y,z:s.z});s.trailTick=0;if(s.trail.length>26)s.trail.shift()}if(s.target&&targetDistance<s.target.r+10){explode(s,'rocket');s.life=0}else if(s.life<=0){explode(s,'rocket');s.life=0}continue;
       }
@@ -782,8 +812,9 @@
     for(const e of state.enemies){e.hit=Math.max(0,e.hit-dt);e.wobble=Math.max(0,(e.wobble||0)-dt*1.1);e.regenDelay=Math.max(0,e.regenDelay-dt);e.slowTimer=Math.max(0,(e.slowTimer||0)-dt);const wallSlowed=!enemyTypes[e.kind].direct&&state.wallSlowCells.has(key(Math.floor(e.x/CELL),Math.floor(e.y/CELL))),weaponSlow=e.slowTimer>0?(e.slowFactor||1):1;e.slowed=wallSlowed||weaponSlow<1;e.speed=e.baseSpeed*(wallSlowed?activePlanet().mods.wallSlow:1)*weaponSlow;if(e.regen&&e.regenDelay<=0&&e.hp>0&&e.hp<e.maxHp)e.hp=Math.min(e.maxHp,e.hp+e.maxHp*e.regen*dt);if(e.hp<=0)continue;const dest=cellCenter(e.path[e.pi]);let dx=dest.x-e.x,dy=dest.y-e.y,d=Math.hypot(dx,dy);if(d<3){if(e.pi>=e.path.length-1){breachBase(e);if(state.over)break;continue}e.pi++;continue}const desiredAngle=Math.atan2(dy,dx);e.angle+=angleDelta(e.angle||0,desiredAngle)*Math.min(1,dt*7);const mv=Math.min(d,e.speed*dt);e.x+=dx/d*mv;e.y+=dy/d*mv;e.phase+=dt*(e.kind==='runner'||e.kind==='splinter'?6:4)}
     const splitDeaths=[];let progressDirty=false;state.enemies=state.enemies.filter(e=>{if(e.reached)return false;if(e.hp<=0){if(selectedEnemyId===e.id)selectedEnemyId=null;state.credits+=e.bounty||14;awardEnemyDefeat(e);progressDirty=true;if(e.split)splitDeaths.push(e);state.cracks.push({x:e.x,y:e.y,life:3,seed:Math.random()*9});state.shocks.push({x:e.x,y:e.y,life:.55,max:.55,color:e.color});burst(e.x,e.y,e.color,e.elite?28:15,e.elite?210:145);sound('kill');return false}return true});if(progressDirty)saveProgress();splitDeaths.forEach(spawnSplitChildren);
     if(state.over){updateUI();return}
+    probeTowerExposure(dt);
     for(const t of state.towers){t.pulse=Math.max(0,t.pulse-dt*4);if(t.type==='drone'||t.type==='wall'){t.cool-=dt;t.jam=0;continue}const c=cellCenter(t);
-      if(t.type==='rail'){const stats=towerStats(t);t.jam=0;if(t.beamTime>0){t.beamTime-=dt;const target=acquireDroneTarget(c,stats.range*stats.range,t.id,0,t.type);if(target){t.angle=Math.atan2(target.y-c.y,target.x-c.x);t.pulse=1;railBeamTick(t,target,stats,dt)}else t.beamHits=[];if(t.beamTime<=0){t.cool=RAIL_BEAM_PAUSE;t.beamHits=null}continue}t.cool-=dt;const target=acquireDroneTarget(c,stats.range*stats.range,t.id,0,t.type);if(t.cool<=0&&target){t.beamTime=RAIL_BEAM_ON;t.beamAccum=0;t.angle=Math.atan2(target.y-c.y,target.x-c.x);sound('rail',c.x)}continue}
+      if(t.type==='rail'){const stats=towerStats(t);t.jam=0;if(t.beamTime>0){t.beamTime-=dt;const target=acquireDroneTarget(c,stats.range*stats.range,t.id,0,t.type);if(target){t.angle=Math.atan2(target.y-c.y,target.x-c.x);t.pulse=1;railBeamTick(t,target,stats,dt)}else t.beamHits=[];if(t.beamTime<=0){t.cool=railPause(stats.rateLevel);t.beamHits=null}continue}t.cool-=dt;const target=acquireDroneTarget(c,stats.range*stats.range,t.id,0,t.type);if(t.cool<=0&&target){t.beamTime=GAME_BALANCE.railBeam.on;t.beamAccum=0;t.angle=Math.atan2(target.y-c.y,target.x-c.x);sound('rail',c.x)}continue}
       let jam=0;for(const e of state.enemies){if(e.kind!=='splinter'||e.hp<=0)continue;const jx=e.x-c.x,jy=e.y-c.y;if(jx*jx+jy*jy<4900){jam++;if(jam>=2)break}}t.jam=jam;t.cool-=dt/(1+.4*jam);const stats=towerStats(t),minRangeSq=stats.minRange?stats.minRange*stats.minRange:0,target=acquireDroneTarget(c,stats.range*stats.range,t.id,minRangeSq,t.type);if(t.cool<=0&&target){shoot(t,target);t.cool=stats.rate}}
     updateDrones(dt);updateShots(dt);
     for(const p of state.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.z=Math.max(0,p.z+p.vz*dt);p.vz-=120*dt;p.life-=dt}compactAlive(state.particles);for(const f of state.floaters){f.z+=28*dt;f.life-=dt}compactAlive(state.floaters);for(const c of state.cracks)c.life-=dt;compactAlive(state.cracks);for(const s of state.shocks)s.life-=dt;compactAlive(state.shocks);state.shake=Math.max(0,state.shake-dt*16);
@@ -1232,22 +1263,37 @@
     }finally{ctx=previous.ctx;renderDetail=previous.renderDetail;sceneTime=previous.sceneTime;activePlanetId=previous.planet;base=previous.base;state=previous.state;selectedTowerId=previous.selectedTowerId;selectedEnemyId=previous.selectedEnemyId}
   }
   globalThis.ICEBOUND_DEV={getCatalog:developerCatalog,renderReference:renderDeveloperReference};
+  /* TURM-KENNZAHLEN fuer den Testbot, nur mit ?balance-probe (Docs/BALANCING.md,
+     Abschnitt "Turm-Kennzahlen"). Reichweite und Standort gehoeren zur
+     Leistung und werden bewusst NICHT herausgerechnet. Je Turm:
+       fieldHp    Leben + Schild aller Gegner seiner Zielgruppe (canHit), die
+                  seit seinem Bau im Spiel waren - je Gegner einmal, mit dem
+                  Restleben beim Bau bzw. beim Erscheinen
+       fieldTime  Sekunden seit Bau, in denen Gegner auf dem Feld waren
+                  (Pausen und Bauphase zaehlen nicht)
+     Je Turmart (state.probeTypeHp): dasselbe Gegnerleben ab dem ersten Turm
+     dieser Art, jeder Gegner nur einmal. Im normalen Spiel laeuft nichts davon. */
+  function probeTowerExposure(dt){if(!BALANCE_PROBE||state.testMode)return;const alive=state.enemies.filter(e=>e.hp>0&&!e.reached);if(!alive.length)return;const typeSeen=state.probeTypeSeen=state.probeTypeSeen||{},typeHp=state.probeTypeHp=state.probeTypeHp||{};
+    for(const t of state.towers){if(t.type==='wall')continue;t.fieldTime=(t.fieldTime||0)+dt;t.seenIds=t.seenIds||new Set();const ts=typeSeen[t.type]=typeSeen[t.type]||new Set();
+      for(const e of alive){if(!canHit(t.type,e))continue;const hp=e.hp+(e.shield||0);if(!t.seenIds.has(e.id)){t.seenIds.add(e.id);t.fieldHp=(t.fieldHp||0)+hp}if(!ts.has(e.id)){ts.add(e.id);typeHp[t.type]=(typeHp[t.type]||0)+hp}}}}
   /* BALANCING-ZUGANG — nur mit ?balance-probe in der URL. Im normalen Spiel
      existiert dieses Objekt nicht. Erlaubt einem Test-Skript, Missionen ohne
      Zeichnen durchzurechnen und Anlagen zu planen.
      Ablauf und Testbot: Docs/BALANCING.md */
-  if(new URLSearchParams(location.search).has('balance-probe'))globalThis.ICEBOUND_PROBE={
+  if(BALANCE_PROBE)globalThis.ICEBOUND_PROBE={
     snapshot:()=>({wave:state.wave,maxWaves:state.maxWaves,credits:state.credits,integrity:state.integrity,
       xp:progress.xp,over:state.over,result:state.result,started:state.started,buildPhase:state.buildPhase,
       waveActive:state.waveActive,enemies:state.enemies.length,spawnLeft:state.spawnLeft,
       kills:state.kills,breaches:state.breaches,
-      towers:state.towers.map(t=>({type:t.type,x:t.x,y:t.y,dmg:Math.round(t.damageDealt||0),kills:t.kills||0})),
+      towers:state.towers.map(t=>({type:t.type,x:t.x,y:t.y,dmg:Math.round(t.damageDealt||0),kills:t.kills||0,inv:t.investment||0,seen:Math.round(t.fieldHp||0),act:+(t.fieldTime||0).toFixed(2)})),typeHp:Object.fromEntries(Object.entries(state.probeTypeHp||{}).map(([k,v])=>[k,Math.round(v)])),
       paths:state.paths.map(p=>p.length)}),
     allPaths:()=>state.paths.map(p=>p.map(c=>({x:c.x,y:c.y}))),
     obstacles:()=>obstacles.map(o=>({x:o.x,y:o.y})),
     obstacleColumns:()=>{const cols=new Array(COLS).fill(0);for(const o of obstacles)cols[o.x]++;return cols},
     map:()=>({base:{...base},spawns:spawnPoints.map(s=>({...s})),cols:COLS,rows:ROWS,rowTop:ROW_TOP,cell:CELL}),
     pending:()=>(state.pending||[]).map(p=>({x:p.x,y:p.y,type:p.type,cost:p.cost})),
+    /* Nur fuer Balancing-Experimente: Turmwert zur Laufzeit setzen (z. B. setWeaponStat('disruptor','damage',85)). */
+    setWeaponStat:(type,key,value)=>{if(types[type])types[type][key]=value;return types[type]?.[key]},
     pointer:()=>({gx:mouse.gx,gy:mouse.gy}),
     canBuild:(gx,gy)=>!obstacleAt(gx,gy)&&!occupied(gx,gy)&&!spawnPointAt(gx,gy)&&!baseReserved(gx,gy),
     routesStayOpen:(gx,gy)=>allSpawnRoutes({x:gx,y:gy}).every(Boolean),
