@@ -140,6 +140,12 @@ body.mission-screen .intel{display:none}
 .primary-actions #speedBtn.paused{border-color:#ffd36a;color:#ffd36a;box-shadow:inset 0 -2px 0 #ffd36a}
 .support-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 6px 6px;background:#223334}
 .support-actions[hidden]{display:none}
+/* Rueckblick auf das Labyrinth eines gewonnenen Levels: nur Neustart und Kopieren. */
+.review-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 6px 6px;background:#223334}
+.review-actions[hidden]{display:none}
+.review-actions p{grid-column:1/-1;margin:0;padding:6px 4px 2px;font:700 10.5px "Arial Narrow",system-ui,sans-serif;letter-spacing:.08em;color:#ffe09a}
+.review-actions button{appearance:none;border:1px solid #718785;background:#34494a;color:#eaf3ef;font:700 10.5px "Arial Narrow",system-ui,sans-serif;letter-spacing:.08em;padding:9px 4px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.review-actions #reviewRestartBtn{background:#2f6b5a;border-color:#8fd9b6}
 .support-actions button{appearance:none;display:flex;flex-direction:column;align-items:center;gap:2px;border:1px solid #718785;background:#34494a;color:#eaf3ef;font:700 10.5px "Arial Narrow",system-ui,sans-serif;letter-spacing:.08em;padding:7px 4px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .support-actions button em{font-style:normal;font-size:9.5px;letter-spacing:.06em;color:#ffe09a}
 .support-actions button:hover:not(:disabled){background:#4f6b67}
